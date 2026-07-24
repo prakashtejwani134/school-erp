@@ -1,0 +1,136 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  DIRECTOR
+  ADMIN
+  TEACHER
+  PARENT
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@index([email, role])
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  name      String
+  section   String
+  createdAt DateTime @default(now())
+
+  students  Student[]
+}
+
+model Student {
+  id            String   @id @default(uuid())
+  admissionNo   String   @unique
+  firstName     String
+  lastName      String
+  parentPhone   String
+  classId       String
+  class         Class    @relation(fields: [classId], references: [id])
+  isDiscounted  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  feeDues       FeeDue[]
+  feeReceipts   FeeReceipt[]
+  attendances   Attendance[]
+
+  @@index([classId])
+  @@index([admissionNo])
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK_TRANSFER
+  CHEQUE
+}
+
+model FeeStructure {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Float
+  dueDate     DateTime
+  classId     String
+  createdAt   DateTime @default(now())
+
+  feeDues     FeeDue[]
+}
+
+model FeeDue {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  feeStructureId String
+  feeStructure   FeeStructure @relation(fields: [feeStructureId], references: [id])
+  dueAmount      Float
+  isPaid         Boolean      @default(false)
+
+  feeReceipts    FeeReceipt[]
+
+  @@index([studentId, isPaid])
+}
+
+model FeeReceipt {
+  id            String      @id @default(uuid())
+  receiptNo     String      @unique
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id])
+  feeDueId      String
+  feeDue        FeeDue      @relation(fields: [feeDueId], references: [id])
+  paidAmount    Float
+  paymentMode   PaymentMode
+  collectedBy   String
+  transactionId String?
+  createdAt     DateTime    @default(now())
+
+  @@index([studentId])
+  @@index([createdAt])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  LEAVE
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  date      DateTime         @db.Date
+  status    AttendanceStatus @default(PRESENT)
+
+  @@unique([studentId, date])
+  @@index([date])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
