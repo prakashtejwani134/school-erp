@@ -10,13 +10,15 @@ import {
 import { motion } from "framer-motion";
 
 import {
-  Card,
   CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { GlassCard } from "@/components/ui/glass-card";
+import { formatINR } from "@/lib/currency";
 
 const STAT_ICONS = {
   users: Users,
@@ -27,14 +29,27 @@ const STAT_ICONS = {
 
 export type StatIconName = keyof typeof STAT_ICONS;
 
+// Server Components can't pass functions as props to Client Components like
+// this one, so callers pass a serializable format *name* instead of a
+// formatter function, and the actual formatter is resolved here.
+const STAT_FORMATTERS = {
+  integer: (n: number) => Math.round(n).toLocaleString("en-IN"),
+  currency: (n: number) => formatINR(n),
+  percent: (n: number) => `${Math.round(n)}%`,
+} as const satisfies Record<string, (value: number) => string>;
+
+export type StatFormat = keyof typeof STAT_FORMATTERS;
+
 export function StatCard({
   label,
   value,
+  format = "integer",
   footer,
   icon,
 }: {
   label: string;
-  value: string;
+  value: number;
+  format?: StatFormat;
   footer: string;
   icon: StatIconName;
 }) {
@@ -45,19 +60,11 @@ export function StatCard({
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
     >
-      <Card className="group relative h-full overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 0%, color-mix(in oklch, var(--primary), transparent 88%), transparent 70%)",
-          }}
-        />
+      <GlassCard className="h-full transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10">
         <CardHeader>
           <CardDescription>{label}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {value}
+            <AnimatedCounter value={value} format={STAT_FORMATTERS[format]} />
           </CardTitle>
           <CardAction>
             <div className="flex size-8 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors duration-300 group-hover:bg-primary/10 group-hover:text-primary">
@@ -68,7 +75,7 @@ export function StatCard({
         <CardFooter>
           <p className="text-xs text-muted-foreground">{footer}</p>
         </CardFooter>
-      </Card>
+      </GlassCard>
     </motion.div>
   );
 }

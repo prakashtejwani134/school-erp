@@ -1,7 +1,13 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronRight,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 import type { StudentRow } from "./types";
 
@@ -29,7 +36,7 @@ function SortButton({
   );
 }
 
-function FeeStatusBadge({
+export function FeeStatusBadge({
   status,
   pendingDueCount,
 }: {
@@ -61,6 +68,18 @@ export function getColumns({
   onDeleteRequest: (student: StudentRow) => void;
 }): ColumnDef<StudentRow>[] {
   return [
+    {
+      id: "expander",
+      header: () => null,
+      cell: ({ row }) => (
+        <ChevronRight
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-200",
+            row.getIsExpanded() && "rotate-90",
+          )}
+        />
+      ),
+    },
     {
       id: "name",
       accessorFn: (row) => `${row.firstName} ${row.lastName}`,
@@ -105,29 +124,34 @@ export function getColumns({
     {
       id: "actions",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" size="icon" className="ml-auto flex">
-                <MoreHorizontal />
-                <span className="sr-only">Open actions</span>
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(row.original)}>
-              <Pencil />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => onDeleteRequest(row.original)}
-            >
-              <Trash2 />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div
+          className="flex justify-end"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon" className="ml-auto flex">
+                  <MoreHorizontal />
+                  <span className="sr-only">Open actions</span>
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(row.original)}>
+                <Pencil />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => onDeleteRequest(row.original)}
+              >
+                <Trash2 />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
   ];

@@ -6,6 +6,8 @@ export type StudentRow = {
   lastName: string;
   admissionNo: string;
   parentPhone: string;
+  address: string | null;
+  enrolledAt: string;
   classId: string;
   className: string;
   isDiscounted: boolean;

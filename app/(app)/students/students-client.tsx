@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageFadeIn } from "@/components/motion/fade-in";
 
 import { getColumns } from "./columns";
 import { DataTable } from "./data-table";
 import { DeleteStudentDialog } from "./delete-student-dialog";
 import { StudentFormDialog } from "./student-form-dialog";
+import { StudentRowDetail } from "./student-row-detail";
 import type { ClassOption, StudentRow } from "./types";
 
 export function StudentsClient({
@@ -36,6 +37,23 @@ export function StudentsClient({
   const [deletingStudent, setDeletingStudent] =
     React.useState<StudentRow | null>(null);
   const [formKey, setFormKey] = React.useState(0);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  React.useEffect(() => {
+    // Syncing dialog-open state to the ?action= query param set by the
+    // command palette / other pages — a legitimate external-system sync,
+    // not derivable state, so setState-in-effect is intentional here.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (searchParams.get("action") === "new") {
+      setEditingStudent(null);
+      setFormKey((k) => k + 1);
+      setFormOpen(true);
+      router.replace("/students", { scroll: false });
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const filtered = React.useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -65,7 +83,7 @@ export function StudentsClient({
   );
 
   return (
-    <PageFadeIn className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative w-full sm:w-64">
@@ -106,7 +124,12 @@ export function StudentsClient({
         </Button>
       </div>
 
-      <DataTable columns={columns} data={filtered} />
+      <DataTable
+        columns={columns}
+        data={filtered}
+        getRowId={(student) => student.id}
+        renderRowDetail={(student) => <StudentRowDetail student={student} />}
+      />
 
       <StudentFormDialog
         key={formKey}
@@ -122,6 +145,6 @@ export function StudentsClient({
           if (!open) setDeletingStudent(null);
         }}
       />
-    </PageFadeIn>
+    </div>
   );
 }

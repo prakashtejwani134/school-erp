@@ -120,6 +120,15 @@ export function StudentFormDialog({
             </div>
 
             <div className="grid gap-2">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                name="address"
+                defaultValue={student?.address ?? ""}
+              />
+            </div>
+
+            <div className="grid gap-2">
               <Label htmlFor="classId">Class</Label>
               <Select
                 key={student?.id ?? "new"}

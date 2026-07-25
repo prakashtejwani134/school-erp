@@ -2,9 +2,11 @@
 
 import {
   type ColumnDef,
+  type ExpandedState,
   type SortingState,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -18,23 +20,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AnimatedTableBody, AnimatedTableRow } from "@/components/motion/table-row";
+import { ExpandableDetailRow } from "@/components/ui/expandable-table";
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  getRowId,
+  renderRowDetail,
 }: {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  getRowId?: (row: TData) => string;
+  renderRowDetail?: (row: TData) => React.ReactNode;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [expanded, setExpanded] = React.useState<ExpandedState>({});
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, expanded },
     onSortingChange: setSorting,
+    onExpandedChange: setExpanded,
+    getRowId: getRowId ? (row) => getRowId(row) : undefined,
+    getRowCanExpand: () => Boolean(renderRowDetail),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
   });
 
   return (
@@ -59,13 +71,28 @@ export function DataTable<TData, TValue>({
         <AnimatedTableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <AnimatedTableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </AnimatedTableRow>
+              <React.Fragment key={row.id}>
+                <AnimatedTableRow
+                  className={renderRowDetail ? "cursor-pointer" : undefined}
+                  onClick={
+                    renderRowDetail ? () => row.toggleExpanded() : undefined
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </AnimatedTableRow>
+                {renderRowDetail ? (
+                  <ExpandableDetailRow
+                    open={row.getIsExpanded()}
+                    colSpan={columns.length}
+                  >
+                    {renderRowDetail(row.original)}
+                  </ExpandableDetailRow>
+                ) : null}
+              </React.Fragment>
             ))
           ) : (
             <TableRow>

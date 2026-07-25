@@ -23,9 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AttendancePillToggle } from "@/components/ui/attendance-pill-toggle";
 import { Switch } from "@/components/ui/switch";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { PageFadeIn } from "@/components/motion/fade-in";
 
 import { saveAttendance } from "./actions";
 
@@ -38,37 +37,6 @@ export type StudentAttendanceRow = {
   admissionNo: string;
   status: AttendanceStatus;
 };
-
-const STATUS_OPTIONS: {
-  value: AttendanceStatus;
-  label: string;
-  activeClass: string;
-}[] = [
-  {
-    value: "PRESENT",
-    label: "Present",
-    activeClass:
-      "aria-pressed:bg-emerald-500/15 aria-pressed:text-emerald-700 dark:aria-pressed:text-emerald-400",
-  },
-  {
-    value: "ABSENT",
-    label: "Absent",
-    activeClass:
-      "aria-pressed:bg-red-500/15 aria-pressed:text-red-700 dark:aria-pressed:text-red-400",
-  },
-  {
-    value: "LATE",
-    label: "Late",
-    activeClass:
-      "aria-pressed:bg-amber-500/15 aria-pressed:text-amber-700 dark:aria-pressed:text-amber-400",
-  },
-  {
-    value: "LEAVE",
-    label: "Leave",
-    activeClass:
-      "aria-pressed:bg-blue-500/15 aria-pressed:text-blue-700 dark:aria-pressed:text-blue-400",
-  },
-];
 
 function AttendanceFilters({
   classes,
@@ -216,25 +184,11 @@ function AttendanceMarkingList({
                 {student.admissionNo}
               </p>
             </div>
-            <ToggleGroup
-              value={[statuses[student.id]]}
-              onValueChange={(next) => {
-                if (next.length > 0) {
-                  setStatus(student.id, next[0] as AttendanceStatus);
-                }
-              }}
-              variant="outline"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <ToggleGroupItem
-                  key={opt.value}
-                  value={opt.value}
-                  className={opt.activeClass}
-                >
-                  {opt.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+            <AttendancePillToggle
+              value={statuses[student.id]}
+              onChange={(status) => setStatus(student.id, status)}
+              groupId={student.id}
+            />
           </div>
         ))}
       </CardContent>
@@ -259,7 +213,7 @@ export function AttendanceClient({
   students: StudentAttendanceRow[];
 }) {
   return (
-    <PageFadeIn className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <AttendanceFilters
         classes={classes}
         selectedClassId={selectedClassId}
@@ -270,6 +224,6 @@ export function AttendanceClient({
         students={students}
         selectedDate={selectedDate}
       />
-    </PageFadeIn>
+    </div>
   );
 }

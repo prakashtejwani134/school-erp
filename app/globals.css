@@ -134,4 +134,19 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  /* Isolates a single element for printing — everything else is hidden but
+     stays in normal flow (visibility, not display), so no layout recalculates. */
+  body:has(#receipt-print-area) * {
+    visibility: hidden;
+  }
+  #receipt-print-area,
+  #receipt-print-area * {
+    visibility: visible;
+  }
+  #receipt-print-area {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+  }
 }

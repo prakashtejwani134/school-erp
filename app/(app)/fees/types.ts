@@ -21,6 +21,7 @@ export type PendingDueRow = {
 export type ReceiptRow = {
   id: string;
   receiptNo: string;
+  studentId: string;
   studentName: string;
   admissionNo: string;
   className: string;
@@ -37,4 +38,12 @@ export type StudentDue = {
   feeTitle: string;
   dueAmount: number;
   dueDate: string;
+};
+
+export type SchoolBranding = {
+  schoolName: string;
+  logoUrl: string | null;
+  address: string;
+  phone: string;
+  email: string;
 };

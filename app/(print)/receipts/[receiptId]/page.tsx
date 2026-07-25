@@ -4,14 +4,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDisplayDateTime } from "@/lib/date";
 import { formatINR } from "@/lib/currency";
+import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
 import { PrintButton } from "./print-button";
-
-const PAYMENT_MODE_LABELS: Record<string, string> = {
-  CASH: "Cash",
-  UPI: "UPI",
-  CHEQUE: "Cheque",
-  BANK_TRANSFER: "Bank Transfer",
-};
 
 async function getReceipt(receiptId: string) {
   return prisma.feeReceipt.findUnique({
@@ -49,7 +43,10 @@ export default async function ReceiptPrintPage({
         <PrintButton />
       </div>
 
-      <div className="rounded-xl border p-8 print:rounded-none print:border-0">
+      <div
+        id="receipt-print-area"
+        className="rounded-xl border p-8 print:rounded-none print:border-0"
+      >
         <div className="flex items-start justify-between border-b pb-4">
           <div>
             <h1 className="text-lg font-semibold">Greenwood School</h1>
@@ -83,7 +80,7 @@ export default async function ReceiptPrintPage({
           <div>
             <p className="text-muted-foreground">Payment Mode</p>
             <p className="font-medium">
-              {PAYMENT_MODE_LABELS[receipt.paymentMode] ?? receipt.paymentMode}
+              {PAYMENT_MODE_LABELS[receipt.paymentMode]}
             </p>
           </div>
           {receipt.transactionId ? (

@@ -33,23 +33,24 @@ model Class {
   section   String
   createdAt DateTime @default(now())
 
-  students  Student[]
+  students Student[]
 }
 
 model Student {
-  id            String   @id @default(uuid())
-  admissionNo   String   @unique
-  firstName     String
-  lastName      String
-  parentPhone   String
-  classId       String
-  class         Class    @relation(fields: [classId], references: [id])
-  isDiscounted  Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  id           String   @id @default(uuid())
+  admissionNo  String   @unique
+  firstName    String
+  lastName     String
+  parentPhone  String
+  address      String?
+  classId      String
+  class        Class    @relation(fields: [classId], references: [id])
+  isDiscounted Boolean  @default(false)
+  createdAt    DateTime @default(now())
 
-  feeDues       FeeDue[]
-  feeReceipts   FeeReceipt[]
-  attendances   Attendance[]
+  feeDues     FeeDue[]
+  feeReceipts FeeReceipt[]
+  attendances Attendance[]
 
   @@index([classId])
   @@index([admissionNo])
@@ -63,14 +64,14 @@ enum PaymentMode {
 }
 
 model FeeStructure {
-  id          String   @id @default(uuid())
-  title       String
-  amount      Float
-  dueDate     DateTime
-  classId     String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  title     String
+  amount    Float
+  dueDate   DateTime
+  classId   String
+  createdAt DateTime @default(now())
 
-  feeDues     FeeDue[]
+  feeDues FeeDue[]
 }
 
 model FeeDue {
@@ -82,7 +83,7 @@ model FeeDue {
   dueAmount      Float
   isPaid         Boolean      @default(false)
 
-  feeReceipts    FeeReceipt[]
+  feeReceipts FeeReceipt[]
 
   @@index([studentId, isPaid])
 }
@@ -133,4 +134,38 @@ model AuditLog {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model SchoolSettings {
+  id                  String   @id @default(cuid())
+  schoolName          String
+  logoUrl             String?
+  address             String
+  phone               String
+  email               String
+  currency            String   @default("USD")
+  currentAcademicYear String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  feeCategories FeeCategoryRule[]
+}
+
+enum FeeFrequency {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+model FeeCategoryRule {
+  id                String         @id @default(cuid())
+  schoolSettingsId  String
+  schoolSettings    SchoolSettings @relation(fields: [schoolSettingsId], references: [id], onDelete: Cascade)
+  name              String
+  amount            Float
+  frequency         FeeFrequency
+  lateFeePercentage Float          @default(0.0)
+  createdAt         DateTime       @default(now())
+
+  @@index([schoolSettingsId])
 }

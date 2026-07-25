@@ -39,10 +39,6 @@ export function ProfileMenu({
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
 
-  function handleSettingsClick() {
-    toast.info("Settings coming soon.");
-  }
-
   function handleLogout() {
     toast.loading("Logging out...", { id: "logout" });
     startTransition(async () => {
@@ -84,7 +80,7 @@ export function ProfileMenu({
           <UserRound />
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSettingsClick}>
+        <DropdownMenuItem render={<Link href="/settings" />}>
           <Settings />
           Settings
         </DropdownMenuItem>

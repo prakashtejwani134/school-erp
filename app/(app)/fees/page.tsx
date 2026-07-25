@@ -1,7 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { formatDisplayDate } from "@/lib/date";
 import { FeesClient } from "./fees-client";
-import type { PendingDueRow, ReceiptRow, StudentOption } from "./types";
+import type {
+  PendingDueRow,
+  ReceiptRow,
+  SchoolBranding,
+  StudentOption,
+} from "./types";
+
+const DEFAULT_BRANDING: SchoolBranding = {
+  schoolName: "Greenwood School",
+  logoUrl: null,
+  address: "",
+  phone: "",
+  email: "",
+};
 
 async function getPendingDues(): Promise<PendingDueRow[]> {
   const dues = await prisma.feeDue.findMany({
@@ -34,6 +47,7 @@ async function getReceipts(): Promise<ReceiptRow[]> {
   return receipts.map((r) => ({
     id: r.id,
     receiptNo: r.receiptNo,
+    studentId: r.studentId,
     studentName: `${r.student.firstName} ${r.student.lastName}`,
     admissionNo: r.student.admissionNo,
     className: `${r.student.class.name}-${r.student.class.section}`,
@@ -68,13 +82,28 @@ async function getCurrentUserName(): Promise<string> {
   return user?.name ?? "Admin";
 }
 
+async function getSchoolBranding(): Promise<SchoolBranding> {
+  const settings = await prisma.schoolSettings.findFirst();
+  if (!settings) return DEFAULT_BRANDING;
+
+  return {
+    schoolName: settings.schoolName,
+    logoUrl: settings.logoUrl,
+    address: settings.address,
+    phone: settings.phone,
+    email: settings.email,
+  };
+}
+
 export default async function FeesPage() {
-  const [pendingDues, receipts, students, currentUserName] = await Promise.all([
-    getPendingDues(),
-    getReceipts(),
-    getStudentOptions(),
-    getCurrentUserName(),
-  ]);
+  const [pendingDues, receipts, students, currentUserName, branding] =
+    await Promise.all([
+      getPendingDues(),
+      getReceipts(),
+      getStudentOptions(),
+      getCurrentUserName(),
+      getSchoolBranding(),
+    ]);
 
   return (
     <FeesClient
@@ -82,6 +111,7 @@ export default async function FeesPage() {
       receipts={receipts}
       students={students}
       currentUserName={currentUserName}
+      branding={branding}
     />
   );
 }

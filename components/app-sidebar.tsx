@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ScrollText,
   School,
+  Settings,
   Users,
 } from "lucide-react";
 
@@ -34,6 +35,7 @@ const navItems = [
   { title: "Attendance", href: "/attendance", icon: CalendarCheck },
   { title: "Fees", href: "/fees", icon: IndianRupee },
   { title: "Audit Logs", href: "/audit-logs", icon: ScrollText },
+  { title: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {

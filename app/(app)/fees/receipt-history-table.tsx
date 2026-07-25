@@ -1,6 +1,7 @@
 "use client";
 
-import { Printer } from "lucide-react";
+import * as React from "react";
+import { ChevronRight, Printer } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,30 +13,70 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AnimatedTableBody, AnimatedTableRow } from "@/components/motion/table-row";
+import { ExpandableDetailRow } from "@/components/ui/expandable-table";
+import { ReceiptModal } from "@/components/fees/receipt-modal";
 import { formatINR } from "@/lib/currency";
+import {
+  PAYMENT_MODE_BADGE_STYLES,
+  PAYMENT_MODE_LABELS,
+} from "@/lib/payment-mode";
+import { cn } from "@/lib/utils";
 
-import type { ReceiptRow } from "./types";
+import type { ReceiptRow, SchoolBranding } from "./types";
 
-const PAYMENT_MODE_STYLES: Record<ReceiptRow["paymentMode"], string> = {
-  CASH: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  UPI: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
-  CHEQUE: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  BANK_TRANSFER: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
-};
+const COLUMN_COUNT = 9;
 
-const PAYMENT_MODE_LABELS: Record<ReceiptRow["paymentMode"], string> = {
-  CASH: "Cash",
-  UPI: "UPI",
-  CHEQUE: "Cheque",
-  BANK_TRANSFER: "Bank Transfer",
-};
+function ReceiptDetail({ receipt }: { receipt: ReceiptRow }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <p className="text-xs text-muted-foreground">Fee Category</p>
+        <p className="text-sm font-medium">{receipt.feeTitle}</p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">Amount Paid</p>
+        <p className="text-sm font-medium tabular-nums">
+          {formatINR(receipt.paidAmount)}
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">Payment Method</p>
+        <p className="text-sm font-medium">
+          {PAYMENT_MODE_LABELS[receipt.paymentMode]}
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">Transaction ID</p>
+        <p className="text-sm font-medium">
+          {receipt.transactionId ?? "Not recorded"}
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">Collected By</p>
+        <p className="text-sm font-medium">{receipt.collectedBy}</p>
+      </div>
+    </div>
+  );
+}
 
-export function ReceiptHistoryTable({ receipts }: { receipts: ReceiptRow[] }) {
+export function ReceiptHistoryTable({
+  receipts,
+  branding,
+}: {
+  receipts: ReceiptRow[];
+  branding: SchoolBranding;
+}) {
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const [modalReceipt, setModalReceipt] = React.useState<ReceiptRow | null>(
+    null,
+  );
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-8" />
             <TableHead>Receipt No</TableHead>
             <TableHead>Student</TableHead>
             <TableHead>Fee</TableHead>
@@ -48,52 +89,68 @@ export function ReceiptHistoryTable({ receipts }: { receipts: ReceiptRow[] }) {
         </TableHeader>
         <AnimatedTableBody>
           {receipts.length ? (
-            receipts.map((r) => (
-              <AnimatedTableRow key={r.id}>
-                <TableCell className="font-mono text-xs">
-                  {r.receiptNo}
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium">{r.studentName}</span>
-                  <span className="block text-xs text-muted-foreground">
-                    {r.admissionNo} · {r.className}
-                  </span>
-                </TableCell>
-                <TableCell>{r.feeTitle}</TableCell>
-                <TableCell>
-                  <Badge
-                    className={`border-transparent ${PAYMENT_MODE_STYLES[r.paymentMode]}`}
+            receipts.map((r) => {
+              const isExpanded = expandedId === r.id;
+              return (
+                <React.Fragment key={r.id}>
+                  <AnimatedTableRow
+                    className="cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : r.id)}
                   >
-                    {PAYMENT_MODE_LABELS[r.paymentMode]}
-                  </Badge>
-                </TableCell>
-                <TableCell>{r.collectedBy}</TableCell>
-                <TableCell>{r.createdAt}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatINR(r.paidAmount)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    render={
-                      <a
-                        href={`/receipts/${r.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <TableCell>
+                      <ChevronRight
+                        className={cn(
+                          "size-4 text-muted-foreground transition-transform duration-200",
+                          isExpanded && "rotate-90",
+                        )}
                       />
-                    }
-                  >
-                    <Printer />
-                    <span className="sr-only">Print receipt</span>
-                  </Button>
-                </TableCell>
-              </AnimatedTableRow>
-            ))
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {r.receiptNo}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{r.studentName}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {r.admissionNo} · {r.className}
+                      </span>
+                    </TableCell>
+                    <TableCell>{r.feeTitle}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`border-transparent ${PAYMENT_MODE_BADGE_STYLES[r.paymentMode]}`}
+                      >
+                        {PAYMENT_MODE_LABELS[r.paymentMode]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{r.collectedBy}</TableCell>
+                    <TableCell>{r.createdAt}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatINR(r.paidAmount)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModalReceipt(r);
+                        }}
+                      >
+                        <Printer />
+                        <span className="sr-only">View receipt</span>
+                      </Button>
+                    </TableCell>
+                  </AnimatedTableRow>
+                  <ExpandableDetailRow open={isExpanded} colSpan={COLUMN_COUNT}>
+                    <ReceiptDetail receipt={r} />
+                  </ExpandableDetailRow>
+                </React.Fragment>
+              );
+            })
           ) : (
             <TableRow>
               <TableCell
-                colSpan={8}
+                colSpan={COLUMN_COUNT}
                 className="h-24 text-center text-muted-foreground"
               >
                 No receipts yet.
@@ -102,6 +159,14 @@ export function ReceiptHistoryTable({ receipts }: { receipts: ReceiptRow[] }) {
           )}
         </AnimatedTableBody>
       </Table>
+
+      <ReceiptModal
+        receipt={modalReceipt}
+        branding={branding}
+        onOpenChange={(open) => {
+          if (!open) setModalReceipt(null);
+        }}
+      />
     </div>
   );
 }

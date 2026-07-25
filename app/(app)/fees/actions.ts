@@ -96,3 +96,14 @@ export async function collectFee(
     throw new Error("Failed to collect fee. Please try again.");
   }
 }
+
+/** Sum of a student's other still-unpaid dues — used on the receipt as "Balance Remaining". */
+export async function getStudentOutstandingBalance(
+  studentId: string,
+): Promise<number> {
+  const result = await prisma.feeDue.aggregate({
+    _sum: { dueAmount: true },
+    where: { studentId, isPaid: false },
+  });
+  return result._sum.dueAmount ?? 0;
+}

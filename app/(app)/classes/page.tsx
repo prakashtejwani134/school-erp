@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { PageFadeIn } from "@/components/motion/fade-in";
 import { ClassesTable } from "./classes-table";
 import type { ClassRow } from "./types";
 
@@ -21,8 +20,8 @@ export default async function ClassesPage() {
   const classes = await getClasses();
 
   return (
-    <PageFadeIn className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <ClassesTable classes={classes} />
-    </PageFadeIn>
+    </div>
   );
 }

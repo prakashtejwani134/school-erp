@@ -10,6 +10,7 @@ type StudentInput = {
   lastName: string;
   admissionNo: string;
   parentPhone: string;
+  address: string | null;
   classId: string;
   isDiscounted: boolean;
 };
@@ -19,6 +20,7 @@ function parseStudentForm(formData: FormData): StudentInput {
   const lastName = String(formData.get("lastName") ?? "").trim();
   const admissionNo = String(formData.get("admissionNo") ?? "").trim();
   const parentPhone = String(formData.get("parentPhone") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
   const classId = String(formData.get("classId") ?? "").trim();
   const isDiscounted = formData.get("isDiscounted") === "on";
 
@@ -28,7 +30,15 @@ function parseStudentForm(formData: FormData): StudentInput {
   if (!parentPhone) throw new Error("Parent phone is required.");
   if (!classId) throw new Error("Class is required.");
 
-  return { firstName, lastName, admissionNo, parentPhone, classId, isDiscounted };
+  return {
+    firstName,
+    lastName,
+    admissionNo,
+    parentPhone,
+    address: address || null,
+    classId,
+    isDiscounted,
+  };
 }
 
 function friendlyDbError(error: unknown, fallback: string): Error {

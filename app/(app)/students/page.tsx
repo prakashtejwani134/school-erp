@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatDisplayDate } from "@/lib/date";
 import { StudentsClient } from "./students-client";
 import type { ClassOption, FeeStatus, StudentRow } from "./types";
 
@@ -26,6 +27,8 @@ async function getStudents(): Promise<StudentRow[]> {
       lastName: student.lastName,
       admissionNo: student.admissionNo,
       parentPhone: student.parentPhone,
+      address: student.address,
+      enrolledAt: formatDisplayDate(student.createdAt),
       classId: student.classId,
       className: `${student.class.name}-${student.class.section}`,
       isDiscounted: student.isDiscounted,

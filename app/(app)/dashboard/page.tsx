@@ -5,12 +5,6 @@ import { FadeInItem, FadeInStagger } from "@/components/motion/fade-in";
 
 export const dynamic = "force-dynamic";
 
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
-
 async function getDashboardStats() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -62,7 +56,8 @@ export default async function DashboardPage() {
         <FadeInItem>
           <StatCard
             label="Total Students"
-            value={stats.totalStudents.toLocaleString("en-IN")}
+            value={stats.totalStudents}
+            format="integer"
             footer="Across all classes"
             icon="users"
           />
@@ -70,7 +65,8 @@ export default async function DashboardPage() {
         <FadeInItem>
           <StatCard
             label="Monthly Fee Collected"
-            value={inr.format(stats.monthlyCollected)}
+            value={stats.monthlyCollected}
+            format="currency"
             footer="This calendar month"
             icon="indian-rupee"
           />
@@ -78,7 +74,8 @@ export default async function DashboardPage() {
         <FadeInItem>
           <StatCard
             label="Pending Dues"
-            value={inr.format(stats.pendingDuesAmount)}
+            value={stats.pendingDuesAmount}
+            format="currency"
             footer={`${stats.pendingDuesCount} due${stats.pendingDuesCount === 1 ? "" : "s"} outstanding`}
             icon="receipt-text"
           />
@@ -86,7 +83,8 @@ export default async function DashboardPage() {
         <FadeInItem>
           <StatCard
             label="Today's Attendance Rate"
-            value={`${stats.attendanceRate}%`}
+            value={stats.attendanceRate}
+            format="percent"
             footer={
               stats.todayTotal > 0
                 ? `${stats.todayPresent} of ${stats.todayTotal} marked present`
