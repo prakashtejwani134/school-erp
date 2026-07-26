@@ -47,8 +47,15 @@ export async function sendWhatsAppReceipt(receiptId: string): Promise<void> {
     },
   };
 
-  console.log(
-    "[WhatsApp mock] sendWhatsAppReceipt — would POST to Meta WhatsApp Business Cloud API:",
-    JSON.stringify(payload, null, 2),
-  );
+  // Full payload (includes the parent's phone number and student name) is
+  // only logged outside production, to keep student/parent PII out of
+  // production server logs. Swap this block for the real `fetch` call —
+  // `payload` above is already shaped for it — and this log goes away
+  // entirely.
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      "[WhatsApp mock] sendWhatsAppReceipt — would POST to Meta WhatsApp Business Cloud API:",
+      JSON.stringify(payload, null, 2),
+    );
+  }
 }

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Download, Plus } from "lucide-react";
 
@@ -10,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { collectFee } from "./actions";
 import type { CollectFeeInput, CollectFeeResult } from "./actions";
-import { CollectFeeSheet } from "./collect-fee-sheet";
 import { PendingDuesTable } from "./pending-dues-table";
 import { ReceiptHistoryTable } from "./receipt-history-table";
 import type {
@@ -21,6 +21,14 @@ import type {
 } from "./types";
 
 const AMOUNT_EPSILON = 0.01;
+
+// Not needed for the initial dues/receipts view — only once the user opens
+// the collect-fee flow — so it's split into its own chunk instead of
+// bundled into the page's initial JS.
+const CollectFeeSheet = dynamic(
+  () => import("./collect-fee-sheet").then((m) => m.CollectFeeSheet),
+  { ssr: false },
+);
 
 function applyOptimisticPayment(
   state: PendingDueRow[],

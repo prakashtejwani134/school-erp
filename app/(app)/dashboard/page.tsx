@@ -14,8 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CollectionsBarChart } from "@/components/charts/collections-bar-chart";
-import { FeeCategoryDonut } from "@/components/charts/fee-category-donut";
+import { CollectionsBarChart, FeeCategoryDonut } from "@/components/charts/lazy";
 import {
   getDashboardForecast,
   getFeeCategoryBreakdown,

@@ -5,12 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { formatDisplayDateTime } from "@/lib/date";
 import { formatINR } from "@/lib/currency";
 import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
+import { requireRouteAccess } from "@/lib/route-access";
 import { PrintButton } from "./print-button";
 
-async function getReceipt(receiptId: string) {
-  return prisma.feeReceipt.findUnique({
-    where: { id: receiptId },
+/** Scoped to the caller's active school — a receipt id from another tenant resolves to nothing, not someone else's data. */
+async function getReceipt(receiptId: string, schoolId: string) {
+  return prisma.feeReceipt.findFirst({
+    where: { id: receiptId, schoolId },
     include: {
+      school: true,
       student: { include: { class: true } },
       feeDue: { include: { feeStructure: true } },
     },
@@ -23,7 +26,8 @@ export async function generateMetadata({
   params: Promise<{ receiptId: string }>;
 }): Promise<Metadata> {
   const { receiptId } = await params;
-  const receipt = await getReceipt(receiptId);
+  const { schoolId } = await requireRouteAccess("fees");
+  const receipt = await getReceipt(receiptId, schoolId);
   return { title: receipt ? `Receipt ${receipt.receiptNo}` : "Receipt not found" };
 }
 
@@ -33,7 +37,8 @@ export default async function ReceiptPrintPage({
   params: Promise<{ receiptId: string }>;
 }) {
   const { receiptId } = await params;
-  const receipt = await getReceipt(receiptId);
+  const { schoolId } = await requireRouteAccess("fees");
+  const receipt = await getReceipt(receiptId, schoolId);
 
   if (!receipt) notFound();
 
@@ -49,7 +54,7 @@ export default async function ReceiptPrintPage({
       >
         <div className="flex items-start justify-between border-b pb-4">
           <div>
-            <h1 className="text-lg font-semibold">Greenwood School</h1>
+            <h1 className="text-lg font-semibold">{receipt.school.schoolName}</h1>
             <p className="text-sm text-muted-foreground">Fee Receipt</p>
           </div>
           <div className="text-right text-sm">

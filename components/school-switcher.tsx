@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Building2, Check, ChevronsUpDown } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -12,6 +13,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { switchActiveSchool } from "@/lib/school-actions";
+
+// `redirect()` inside the Server Action throws a special tagged error to
+// unwind to the router on success — it must be allowed to propagate, not
+// swallowed as a failure. `next/navigation`'s `isRedirectError` isn't
+// exported from this version's public entry point, so this checks the same
+// `digest` shape it relies on internally.
+function isRedirectError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    typeof error.digest === "string" &&
+    error.digest.startsWith("NEXT_REDIRECT")
+  );
+}
 
 export type SchoolOption = { id: string; name: string };
 
@@ -47,7 +63,16 @@ export function SchoolSwitcher({
   function handleSelect(schoolId: string) {
     if (schoolId === activeSchoolId || isPending) return;
     startTransition(async () => {
-      await switchActiveSchool(schoolId);
+      try {
+        await switchActiveSchool(schoolId);
+      } catch (error) {
+        if (isRedirectError(error)) throw error;
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to switch schools. Please try again.",
+        );
+      }
     });
   }
 

@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Greenwood School ERP",
-  description: "School management dashboard",
+  title: "School ERP Console",
+  description: "Multi-school management dashboard",
 };
 
 export default function RootLayout({

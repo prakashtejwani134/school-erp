@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ERP Blueprint — Leadership Briefing</title>
+<style>
+  :root{
+    --bg: #0b1120;
+    --bg-alt: #10192e;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.09);
+    --ink: #eef2f9;
+    --ink-dim: #a8b3c7;
+    --accent: #34d399;
+    --accent-2: #60a5fa;
+    --accent-3: #f59e0b;
+    --accent-4: #f87171;
+    --accent-5: #a78bfa;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(52,211,153,0.10), transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, rgba(96,165,250,0.10), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    overflow:hidden;
+  }
+  #deck{ position:relative; width:100vw; height:100vh; }
+  .slide{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 6vh 8vw;
+    opacity:0; visibility:hidden;
+    transform: translateY(18px) scale(0.99);
+    transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s;
+    pointer-events:none;
+  }
+  .slide.active{
+    opacity:1; visibility:visible; transform:translateY(0) scale(1);
+    transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1), visibility 0s;
+    pointer-events:auto;
+  }
+  .slide .kicker{
+    font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin-bottom:14px;
+  }
+  .slide h1{
+    font-size: clamp(2rem, 4.6vw, 3.6rem);
+    line-height:1.08; margin:0 0 .5rem 0; font-weight:750; letter-spacing:-.02em;
+  }
+  .slide h2{
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    margin: 0 0 1.2rem 0; font-weight:700; letter-spacing:-.01em;
+  }
+  .slide .sub{
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    color:var(--ink-dim); max-width:60ch; margin-bottom: 2rem;
+    line-height:1.55;
+  }
+  .accent-green{color:var(--accent);}
+  .accent-blue{color:var(--accent-2);}
+  .accent-amber{color:var(--accent-3);}
+  .accent-red{color:var(--accent-4);}
+  .accent-violet{color:var(--accent-5);}
+
+  .grid{ display:grid; gap:18px; }
+  .grid-2{ grid-template-columns: 1fr 1fr; }
+  .grid-3{ grid-template-columns: repeat(3, 1fr); }
+  .grid-4{ grid-template-columns: repeat(4, 1fr); }
+  .grid-5{ grid-template-columns: repeat(5, 1fr); }
+
+  .card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:16px;
+    padding:22px 24px; backdrop-filter: blur(6px);
+  }
+  .card h3{ margin:0 0 8px 0; font-size:1.05rem; font-weight:700; }
+  .card p{ margin:0; color:var(--ink-dim); font-size:.92rem; line-height:1.5; }
+  .card .tag{
+    display:inline-block; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
+    padding:3px 8px; border-radius:999px; margin-bottom:10px; font-weight:700;
+  }
+  .tag-green{ background:rgba(52,211,153,.15); color:var(--accent); }
+  .tag-blue{ background:rgba(96,165,250,.15); color:var(--accent-2); }
+  .tag-amber{ background:rgba(245,158,11,.15); color:var(--accent-3); }
+  .tag-red{ background:rgba(248,113,113,.15); color:var(--accent-4); }
+  .tag-violet{ background:rgba(167,139,250,.15); color:var(--accent-5); }
+
+  .stat{ text-align:left; }
+  .stat .num{
+    font-size: clamp(2.2rem, 5vw, 4.2rem); font-weight:800; letter-spacing:-.03em;
+    line-height:1; margin-bottom:6px;
+  }
+  .stat .label{ color:var(--ink-dim); font-size:.95rem; }
+
+  code, .code{
+    font-family:var(--mono); font-size:.82em;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+    padding:1px 7px; border-radius:6px; color:var(--accent-2);
+  }
+  .footnote{
+    margin-top:auto; padding-top:18px; color:#6b7690; font-size:.78rem;
+    border-top:1px solid rgba(255,255,255,.06);
+  }
+  .badge-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.4rem; }
+  .pill{
+    font-size:.78rem; padding:5px 12px; border-radius:999px; border:1px solid var(--panel-border);
+    color:var(--ink-dim); background:var(--panel);
+  }
+
+  .before-after{ display:grid; grid-template-columns: 1fr auto 1fr; gap:0; align-items:stretch; }
+  .ba-col{ padding:20px 22px; border-radius:16px; }
+  .ba-before{ background:rgba(248,113,113,0.06); border:1px solid rgba(248,113,113,0.22); }
+  .ba-after{ background:rgba(52,211,153,0.06); border:1px solid rgba(52,211,153,0.22); }
+  .ba-arrow{ display:flex; align-items:center; justify-content:center; padding:0 22px; font-size:1.6rem; color:var(--ink-dim); }
+  .ba-col h4{ margin:0 0 10px 0; font-size:.85rem; text-transform:uppercase; letter-spacing:.08em; }
+  .ba-before h4{ color:var(--accent-4); }
+  .ba-after h4{ color:var(--accent); }
+  .ba-col ol{ margin:0; padding-left:1.2em; color:var(--ink-dim); font-size:.92rem; line-height:1.7; }
+  .ba-col ol li span.t{ color:var(--ink); font-weight:600; }
+
+  table.matrix{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  table.matrix th, table.matrix td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--panel-border); }
+  table.matrix th{ color:var(--ink-dim); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
+  table.matrix td.check{ color:var(--accent); font-weight:700; }
+  table.matrix td.dash{ color:#5a6478; }
+
+  /* Chrome for the deck */
+  #progress{
+    position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index:50; transition: width .4s cubic-bezier(.22,1,.36,1);
+  }
+  #controls{
+    position:fixed; bottom:22px; right:28px; display:flex; gap:10px; align-items:center; z-index:50;
+  }
+  #controls button{
+    background:var(--panel); border:1px solid var(--panel-border); color:var(--ink);
+    width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1rem;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .2s, transform .15s;
+  }
+  #controls button:hover{ background:rgba(255,255,255,.1); transform:translateY(-1px); }
+  #counter{
+    position:fixed; bottom:28px; left:28px; color:var(--ink-dim); font-size:.82rem;
+    font-variant-numeric: tabular-nums; z-index:50; letter-spacing:.02em;
+  }
+  #hint{
+    position:fixed; top:22px; right:28px; color:#5a6478; font-size:.74rem; z-index:50;
+  }
+  .logo-mark{
+    position:fixed; top:24px; left:28px; z-index:50; font-size:.82rem; color:var(--ink-dim);
+    display:flex; align-items:center; gap:8px; font-weight:600;
+  }
+  .logo-dot{ width:9px; height:9px; border-radius:3px; background:var(--accent); display:inline-block; }
+
+  ul.plain{ margin:0; padding-left:1.2em; color:var(--ink-dim); font-size:.98rem; line-height:1.75; }
+  ul.plain li span.t{ color:var(--ink); font-weight:650; }
+  ul.plain li{ margin-bottom:4px; }
+
+  .center{ text-align:center; align-items:center; }
+  .center .sub{ margin-left:auto; margin-right:auto; }
+
+  @media (max-width: 900px){
+    .grid-2, .grid-3, .grid-4, .grid-5{ grid-template-columns: 1fr; }
+    .before-after{ grid-template-columns: 1fr; }
+    .ba-arrow{ padding:10px 0; }
+    #hint{ display:none; }
+  }
+
+  @media print {
+    #progress, #controls, #counter, #hint, .logo-mark{ display:none; }
+    .slide{ position:relative; opacity:1; visibility:visible; transform:none; height:100vh; page-break-after:always; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress" style="width:0%"></div>
+<div class="logo-mark"><span class="logo-dot"></span> ERP Blueprint</div>
+<div id="hint">Use ← → or Space · F for fullscreen</div>
+
+<div id="deck">
+
+  <!-- 1. Title -->
+  <section class="slide center">
+    <div class="kicker">Leadership Briefing</div>
+    <h1>From Manual Ledgers to a<br/>Real-Time Financial Command Center</h1>
+    <p class="sub">How the new School ERP changes fee recovery, financial integrity, and day-to-day visibility — built and demonstrated end-to-end, not a mockup.</p>
+    <div class="badge-row" style="justify-content:center">
+      <span class="pill">Multi-campus ready</span>
+      <span class="pill">Real-time collections</span>
+      <span class="pill">Full audit trail</span>
+      <span class="pill">Role-based access</span>
+    </div>
+  </section>
+
+  <!-- 2. Agenda -->
+  <section class="slide">
+    <div class="kicker">What we'll cover</div>
+    <h2>Five outcomes for the school, not five features</h2>
+    <div class="grid grid-5">
+      <div class="card"><span class="tag tag-green">01</span><h3>Faster Fee Recovery</h3><p>Cash converts to receipts in seconds, not days.</p></div>
+      <div class="card"><span class="tag tag-blue">02</span><h3>Zero-Reload Office</h3><p>The front desk never waits on a spinner.</p></div>
+      <div class="card"><span class="tag tag-red">03</span><h3>Fraud Prevention</h3><p>Every rupee has a name, a time, and a reason attached.</p></div>
+      <div class="card"><span class="tag tag-violet">04</span><h3>Multi-Campus Ready</h3><p>One login, every school you run.</p></div>
+      <div class="card"><span class="tag tag-amber">05</span><h3>Leadership Visibility</h3><p>Forecasts and trends without asking accounts for a report.</p></div>
+    </div>
+  </section>
+
+  <!-- 3. The problem -->
+  <section class="slide">
+    <div class="kicker">The status quo we're replacing</div>
+    <h2>What the manual process actually costs</h2>
+    <ul class="plain">
+      <li><span class="t">Ledgers live in registers or spreadsheets</span> — no one can see today's collection total without asking accounts to compile it.</li>
+      <li><span class="t">Reminders are ad-hoc</span> — whoever remembers to chase a family does; there's no systematic way to see who's actually overdue longest.</li>
+      <li><span class="t">Receipts are hand-written or typed per case</span> — numbering, balance math, and reconciliation are all manual and error-prone.</li>
+      <li><span class="t">There is no trail</span> — if a collection is questioned six months later, there's no record of who collected it, when, or how.</li>
+      <li><span class="t">Multiple campuses mean multiple spreadsheets</span> — leadership stitches together numbers from each school separately.</li>
+    </ul>
+  </section>
+
+  <!-- 4. Pillar 1 headline -->
+  <section class="slide">
+    <div class="kicker accent-green">Outcome 01 — Fee Recovery</div>
+    <h1>Estimated <span class="accent-green">3× faster</span> fee recovery cycle</h1>
+    <p class="sub">Not a marketing number — a workflow comparison. Three manual steps that used to take minutes now take seconds, and the system tells staff <em>who to chase first</em> instead of leaving it to memory.</p>
+    <div class="before-after">
+      <div class="ba-col ba-before">
+        <h4>Before — manual office</h4>
+        <ol>
+          <li><span class="t">Look up the ledger</span> — flip through a register or spreadsheet to find the balance (2–3 min)</li>
+          <li><span class="t">Write the receipt</span> — hand-compute the remaining balance, assign the next number (2–3 min)</li>
+          <li><span class="t">Draft a reminder</span> — manually type a WhatsApp/SMS message per family (1–2 min)</li>
+          <li><span class="t">Guess who's overdue</span> — no ranking, so the most overdue families often get chased last</li>
+        </ol>
+      </div>
+      <div class="ba-arrow">→</div>
+      <div class="ba-col ba-after">
+        <h4>After — this system</h4>
+        <ol>
+          <li><span class="t">Type-ahead student search</span> auto-loads live pending dues (&lt; 5 sec)</li>
+          <li><span class="t">One click</span> collects, auto-numbers the receipt, updates the screen instantly (&lt; 10 sec)</li>
+          <li><span class="t">One click</span> opens WhatsApp with the reminder pre-written (~5 sec)</li>
+          <li><span class="t">Auto-ranked risk badges</span> put HIGH-risk families at the top, every time</li>
+        </ol>
+      </div>
+    </div>
+    <div class="footnote">A workflow-derived estimate, not an audited benchmark — validate against your own time-motion data post go-live.</div>
+  </section>
+
+  <!-- 5. Defaulter risk engine -->
+  <section class="slide">
+    <div class="kicker accent-green">Outcome 01 — Detail</div>
+    <h2>The system tells staff who to chase first</h2>
+    <p class="sub">A deterministic risk score (no black-box ML) runs on every pending due, so the pending-dues list surfaces the accounts that matter most instead of a flat, unordered list.</p>
+    <div class="grid grid-3">
+      <div class="card">
+        <span class="tag tag-amber">Signal 1 · 50% weight</span>
+        <h3>Days overdue</h3>
+        <p>The clearest signal a due is actually late — capped at 90 days so one extreme outlier can't dominate the score.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-blue">Signal 2 · 25% weight</span>
+        <h3>Pending due count</h3>
+        <p>Multiple simultaneous unpaid dues on one student compound the risk of non-recovery.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-violet">Signal 3 · 25% weight</span>
+        <h3>Late-payment history</h3>
+        <p>A softer, longer-run signal — how often this family's past receipts landed after the due date.</p>
+      </div>
+    </div>
+    <div class="badge-row" style="margin-top:1.6rem">
+      <span class="pill" style="border-color:rgba(248,113,113,.4); color:#f87171">Score ≥ 55 → High risk (red badge)</span>
+      <span class="pill" style="border-color:rgba(245,158,11,.4); color:#f59e0b">Score ≥ 25 → Medium risk (amber badge)</span>
+      <span class="pill">Below 25 → unbadged, so attention isn't wasted on families already on track</span>
+    </div>
+  </section>
+
+  <!-- 6. One-click reminders + instant receipts -->
+  <section class="slide">
+    <div class="kicker accent-green">Outcome 01 — Detail</div>
+    <h2>One-click reminders. Instant, flexible receipts.</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="tag tag-green">Live today</span>
+        <h3>WhatsApp reminder, one click</h3>
+        <p>Every pending due row has a reminder button that opens WhatsApp with the parent's number and a pre-written message — student name, fee, amount, due date, school name — already filled in. No drafting, no copy-paste.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-green">Live today</span>
+        <h3>Receipt, generated on collection</h3>
+        <p>Auto-numbered per school (e.g. <code>RCPT-GWS-2026-0042</code>), printable as A4 or an 80mm thermal-counter layout, exportable to PDF in one click — and it shows the family's remaining balance across <em>all</em> other dues, not just this one.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-blue">Built-in</span>
+        <h3>Partial payments, handled correctly</h3>
+        <p>Families can pay in installments. The system tracks amount paid vs. total due and only marks a due "settled" once it's actually fully covered.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-amber">Ready to activate</span>
+        <h3>Automated WhatsApp receipt confirmation</h3>
+        <p>The exact message payload is already built and logged on every collection — connecting it to Meta's WhatsApp Business API to send automatically is a configuration step, not new development.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Zero-reload office -->
+  <section class="slide">
+    <div class="kicker accent-blue">Outcome 02 — Front Office Experience</div>
+    <h1>A front office that <span class="accent-blue">never waits on a spinner</span></h1>
+    <p class="sub">Collecting a fee updates the screen the instant the cashier clicks — before the server has even confirmed. Dashboard numbers animate up rather than snapping in a blank-then-flash reload. Staff never lose their place.</p>
+    <div class="grid grid-3">
+      <div class="card">
+        <span class="tag tag-blue">Optimistic UI</span>
+        <h3>Collect, and see it happen now</h3>
+        <p>The pending-dues list updates the moment "Collect" is clicked, then quietly reconciles with the server. No full-page reloads, no waiting on the network to see your own action reflected.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-blue">Animated counters</span>
+        <h3>Dashboard numbers that count up</h3>
+        <p>Total students, monthly collections, pending dues, today's attendance — every headline number animates into place instead of popping in, so the dashboard reads as alive, not static.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-blue">Command palette</span>
+        <h3><code>Ctrl/Cmd + K</code> from anywhere</h3>
+        <p>Any authorized staff member can jump to "Collect Fee" or "Mark Attendance" from a keyboard shortcut, scoped to what their role can actually do — no hunting through menus.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Fraud prevention headline -->
+  <section class="slide">
+    <div class="kicker accent-red">Outcome 03 — Financial Integrity</div>
+    <h1>Every rupee has <span class="accent-red">a name, a time, and a reason</span></h1>
+    <p class="sub">Cash handling is where trust breaks down fastest. The system is built so that every collection, every record change, and every settings update leaves a permanent, attributable trail — automatically, not as an afterthought.</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="tag tag-red">On every collection</span>
+        <h3>An immutable receipt record</h3>
+        <p>Every <code>FeeReceipt</code> permanently stores who collected it, the payment mode, and a transaction/cheque reference — UPI and bank transfer payments cannot be recorded <em>without</em> a reference number.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-red">On every mutation</span>
+        <h3>A parallel audit log entry</h3>
+        <p>Fee collections, student changes, attendance edits, and settings updates all write a structured audit event — action type, target record, a human-readable summary, the acting user, and their IP address.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Audit log detail -->
+  <section class="slide">
+    <div class="kicker accent-red">Outcome 03 — Detail</div>
+    <h2>A searchable ledger of every action taken</h2>
+    <p class="sub">The Audit Logs screen is filterable by action type and record, searchable by user or detail text, refreshes automatically every 20 seconds, and is visible only to the Director role — leadership sees everything; day-to-day staff see only what their job requires.</p>
+    <table class="matrix">
+      <tr><th>What's logged</th><th>Captured detail</th><th>Who can see it</th></tr>
+      <tr><td>Fee collected</td><td>Receipt no., amount, payment mode, student, partial/full status</td><td class="check">Director only</td></tr>
+      <tr><td>Student added / edited / removed</td><td>Name, admission number, acting user</td><td class="check">Director only</td></tr>
+      <tr><td>Attendance marked</td><td>Class, date, number of students recorded</td><td class="check">Director only</td></tr>
+      <tr><td>Settings & fee categories changed</td><td>What changed, new values</td><td class="check">Director only</td></tr>
+      <tr><td>Acting user's IP address</td><td>Captured on every event where available</td><td class="check">Director only</td></tr>
+    </table>
+  </section>
+
+  <!-- 10. RBAC + tenant isolation -->
+  <section class="slide">
+    <div class="kicker accent-red">Outcome 03 — Detail</div>
+    <h2>Access control that's checked, not assumed</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="tag tag-red">Role-gated by design</span>
+        <h3>Four roles, four different views</h3>
+        <p><strong>Director</strong> sees everything including audit logs and settings. <strong>Admin</strong> runs fees and students. <strong>Teacher</strong> runs classes and attendance. <strong>Parent</strong> gets a minimal view. Every restricted page re-checks this on the server — it's not just a hidden menu item.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-red">Session re-verified, every time</span>
+        <h3>No trusting a cookie blindly</h3>
+        <p>Every request re-confirms the signed-in user actually has a live membership at the active school before returning any data — a tampered or stale session cookie resolves to nothing, not someone else's records.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Multi-campus -->
+  <section class="slide">
+    <div class="kicker accent-violet">Outcome 04 — Multi-Campus Governance</div>
+    <h1>One login. <span class="accent-violet">Every school you run.</span></h1>
+    <p class="sub">Every record in the system — students, fees, attendance, audit logs — hangs off a school as its tenant root. A person can hold different roles at different campuses (Director at one, Teacher at another), and switching schools is a single click.</p>
+    <div class="grid grid-3">
+      <div class="card">
+        <span class="tag tag-violet">Data isolation</span>
+        <h3>Campuses can't see each other</h3>
+        <p>Every query is scoped to the active school. A receipt ID from one campus resolves to nothing at another — not an error message revealing it exists, just nothing.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-violet">Independent numbering</span>
+        <h3>No collisions across schools</h3>
+        <p>Receipt numbers are namespaced per school (e.g. <code>GWS</code> vs. <code>RIS</code>), so two campuses running the same day never produce a clashing receipt number.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-violet">One-click switch</span>
+        <h3>Built for a Director running a group</h3>
+        <p>The school switcher re-verifies real membership before switching — it only appears at all once an account actually has more than one school to switch between.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. Leadership visibility -->
+  <section class="slide">
+    <div class="kicker accent-amber">Outcome 05 — Leadership Visibility</div>
+    <h1>Numbers leadership can trust, <span class="accent-amber">without asking accounts</span></h1>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="tag tag-amber">Live forecast</span>
+        <h3>This month's collection, projected</h3>
+        <p>Collected-so-far is scaled by day-of-month progress to project the full month's total, then compared against last month's actual for a fair, full-month-to-full-month growth reading.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-amber">Trend, not just a snapshot</span>
+        <h3>6-month collected vs. pending</h3>
+        <p>A rolling bar chart shows whether collections are keeping pace with what's coming due — the shape of the trend, not just today's number.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-amber">Category breakdown</span>
+        <h3>Where the money is coming from</h3>
+        <p>Collections split by fee type (tuition, exam, etc.), so leadership can see the mix, not just the total.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-amber">One click, always current</span>
+        <h3>CSV export for the board pack</h3>
+        <p>Receipts and the full fee ledger export to CSV on demand — no manual monthly compilation required.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. ROI summary -->
+  <section class="slide">
+    <div class="kicker">Bringing it together</div>
+    <h2>What changes for the school</h2>
+    <div class="grid grid-4">
+      <div class="card stat">
+        <div class="num accent-green">~3×</div>
+        <div class="label">Estimated faster fee recovery cycle per family, from workflow analysis</div>
+      </div>
+      <div class="card stat">
+        <div class="num accent-blue">0</div>
+        <div class="label">Full-page reloads to collect a fee or watch dashboard numbers update</div>
+      </div>
+      <div class="card stat">
+        <div class="num accent-red">100%</div>
+        <div class="label">Of collections, student edits, attendance, and settings changes audit-logged with an acting user</div>
+      </div>
+      <div class="card stat">
+        <div class="num accent-violet">1</div>
+        <div class="label">Login for a Director running multiple campuses, with data kept fully separate</div>
+      </div>
+    </div>
+    <div class="footnote">These are directional, workflow-derived figures grounded in the shipped implementation — not third-party audited claims.</div>
+  </section>
+
+  <!-- 14. Honest roadmap -->
+  <section class="slide">
+    <div class="kicker">What's live today vs. what's next</div>
+    <h2>Built for trust — including being upfront about gaps</h2>
+    <table class="matrix">
+      <tr><th>Capability</th><th>Status</th><th>Note</th></tr>
+      <tr><td>Fee collection, receipts, partial payments</td><td class="check">Live</td><td class="dash">Fully operational end-to-end</td></tr>
+      <tr><td>Defaulter risk scoring</td><td class="check">Live</td><td class="dash">Deterministic, explainable scoring</td></tr>
+      <tr><td>Audit trail & RBAC</td><td class="check">Live</td><td class="dash">Server-enforced on every restricted page</td></tr>
+      <tr><td>Multi-campus tenancy</td><td class="check">Live</td><td class="dash">Demonstrated with two seeded schools today</td></tr>
+      <tr><td>WhatsApp fee reminders (manual)</td><td class="check">Live</td><td class="dash">One-click, opens WhatsApp directly</td></tr>
+      <tr><td>WhatsApp receipt confirmation (automatic)</td><td>Built, not yet connected</td><td class="dash">Payload is ready; needs API credentials switched on</td></tr>
+      <tr><td>Production sign-in (password/SSO)</td><td>Not yet built</td><td class="dash">Current login is a role-picker for demos</td></tr>
+      <tr><td>Multi-currency display</td><td>Not yet built</td><td class="dash">School record supports it; UI is currently INR-only</td></tr>
+    </table>
+  </section>
+
+  <!-- 15. Under the hood -->
+  <section class="slide">
+    <div class="kicker">For the technically curious</div>
+    <h2>Built on a modern, maintainable stack</h2>
+    <div class="grid grid-3">
+      <div class="card"><h3>Next.js 16 (App Router)</h3><p>Server-rendered pages, Server Actions for every write, no separate API layer to keep in sync.</p></div>
+      <div class="card"><h3>PostgreSQL via Prisma 7</h3><p>Hosted on Supabase, accessed through a typed schema with a per-school tenant boundary on every table.</p></div>
+      <div class="card"><h3>React 19</h3><p>Optimistic UI updates and modern rendering patterns power the zero-reload experience.</p></div>
+    </div>
+  </section>
+
+  <!-- 16. Closing -->
+  <section class="slide center">
+    <div class="kicker">Next steps</div>
+    <h1>Ready to see it running on your data</h1>
+    <p class="sub">The system is functional today against seeded demo schools. The path from here is: connect production sign-in, activate live WhatsApp delivery, and migrate real fee structures and student records.</p>
+    <div class="badge-row" style="justify-content:center">
+      <span class="pill">Questions welcome</span>
+      <span class="pill">Live walkthrough available on request</span>
+    </div>
+  </section>
+
+</div>
+
+<div id="counter">1 / 16</div>
+<div id="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <button id="next" aria-label="Next slide">›</button>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var idx = 0;
+
+  var progressEls = document.querySelectorAll('#progress');
+  var counterEl = document.getElementById('counter');
+
+  function render(){
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === idx); });
+    var pct = total > 1 ? (idx / (total - 1)) * 100 : 0;
+    progressEls.forEach(function(p){ p.style.width = pct + '%'; });
+    counterEl.textContent = (idx + 1) + ' / ' + total;
+  }
+
+  function go(delta){
+    idx = Math.max(0, Math.min(total - 1, idx + delta));
+    render();
+  }
+
+  document.getElementById('prev').addEventListener('click', function(){ go(-1); });
+  document.getElementById('next').addEventListener('click', function(){ go(1); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (e.key === 'Home') { idx = 0; render(); }
+    else if (e.key === 'End') { idx = total - 1; render(); }
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+  });
+
+  // Touch swipe
+  var touchStartX = null;
+  document.addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if (touchStartX === null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+    touchStartX = null;
+  }, {passive:true});
+
+  // Click right/left half of screen to navigate (ignore clicks on buttons)
+  document.getElementById('deck').addEventListener('click', function(e){
+    if (e.target.closest('#controls')) return;
+    var x = e.clientX, w = window.innerWidth;
+    go(x > w / 2 ? 1 : -1);
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
