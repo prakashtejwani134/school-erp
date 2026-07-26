@@ -1,0 +1,54 @@
+import "server-only";
+
+import { prisma } from "@/lib/prisma";
+import { formatINR } from "@/lib/currency";
+import { formatDisplayDate } from "@/lib/date";
+import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
+
+/**
+ * Mock WhatsApp delivery for a fee receipt. Builds the exact payload shape
+ * the Meta WhatsApp Business Cloud API expects and logs it instead of
+ * sending it — swap the console.log for a `fetch` to
+ * `https://graph.facebook.com/v.../messages` once WHATSAPP_ACCESS_TOKEN /
+ * WHATSAPP_PHONE_NUMBER_ID are available, no other call sites need to change.
+ */
+export async function sendWhatsAppReceipt(receiptId: string): Promise<void> {
+  const receipt = await prisma.feeReceipt.findUnique({
+    where: { id: receiptId },
+    include: { student: true, feeDue: { include: { feeStructure: true } } },
+  });
+  if (!receipt) return;
+
+  const phone = receipt.student.parentPhone.replace(/\D/g, "");
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "template",
+    template: {
+      name: "fee_receipt_confirmation",
+      language: { code: "en" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: `${receipt.student.firstName} ${receipt.student.lastName}`,
+            },
+            { type: "text", text: receipt.receiptNo },
+            { type: "text", text: formatINR(receipt.paidAmount) },
+            { type: "text", text: receipt.feeDue.feeStructure.title },
+            { type: "text", text: PAYMENT_MODE_LABELS[receipt.paymentMode] },
+            { type: "text", text: formatDisplayDate(receipt.createdAt) },
+          ],
+        },
+      ],
+    },
+  };
+
+  console.log(
+    "[WhatsApp mock] sendWhatsAppReceipt — would POST to Meta WhatsApp Business Cloud API:",
+    JSON.stringify(payload, null, 2),
+  );
+}

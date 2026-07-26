@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { Prisma, FeeFrequency } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { logAudit } from "@/lib/audit";
+import { requireActiveSchoolContext } from "@/lib/school-context";
 
 type SchoolSettingsInput = {
   schoolName: string;
@@ -44,14 +46,19 @@ function parseSchoolSettingsForm(formData: FormData): SchoolSettingsInput {
   };
 }
 
-export async function saveSchoolSettings(id: string | null, formData: FormData) {
+/** Updates the active school's own details. The School row always exists once a membership does — there's no "create the first settings row" branch anymore. */
+export async function saveSchoolSettings(formData: FormData) {
+  const { schoolId } = await requireActiveSchoolContext();
   const data = parseSchoolSettingsForm(formData);
 
-  if (id) {
-    await prisma.schoolSettings.update({ where: { id }, data });
-  } else {
-    await prisma.schoolSettings.create({ data });
-  }
+  const settings = await prisma.school.update({ where: { id: schoolId }, data });
+
+  await logAudit({
+    actionType: "SETTINGS_UPDATED",
+    targetEntity: "School",
+    targetId: settings.id,
+    details: `${data.schoolName} details saved`,
+  });
 
   revalidatePath("/settings");
 }
@@ -95,41 +102,72 @@ function friendlyDbError(error: unknown, fallback: string): Error {
   return new Error(fallback);
 }
 
-export async function createFeeCategoryRule(
-  schoolSettingsId: string,
-  formData: FormData,
-) {
+export async function createFeeCategoryRule(formData: FormData) {
+  const { schoolId } = await requireActiveSchoolContext();
   const data = parseFeeCategoryRuleForm(formData);
 
+  let created;
   try {
-    await prisma.feeCategoryRule.create({
-      data: { ...data, schoolSettingsId },
+    created = await prisma.feeCategoryRule.create({
+      data: { ...data, schoolId },
     });
   } catch (error) {
     throw friendlyDbError(error, "Failed to create fee category.");
   }
 
+  await logAudit({
+    actionType: "FEE_CATEGORY_CREATED",
+    targetEntity: "FeeCategoryRule",
+    targetId: created.id,
+    details: `${data.name} — ${data.amount} (${data.frequency})`,
+  });
+
   revalidatePath("/settings");
 }
 
 export async function updateFeeCategoryRule(id: string, formData: FormData) {
+  const { schoolId } = await requireActiveSchoolContext();
   const data = parseFeeCategoryRuleForm(formData);
 
+  let count: number;
   try {
-    await prisma.feeCategoryRule.update({ where: { id }, data });
+    ({ count } = await prisma.feeCategoryRule.updateMany({
+      where: { id, schoolId },
+      data,
+    }));
   } catch (error) {
     throw friendlyDbError(error, "Failed to update fee category.");
   }
+  if (count === 0) throw new Error("This fee category no longer exists.");
+
+  await logAudit({
+    actionType: "FEE_CATEGORY_UPDATED",
+    targetEntity: "FeeCategoryRule",
+    targetId: id,
+    details: `${data.name} — ${data.amount} (${data.frequency})`,
+  });
 
   revalidatePath("/settings");
 }
 
 export async function deleteFeeCategoryRule(id: string) {
+  const { schoolId } = await requireActiveSchoolContext();
+
+  const rule = await prisma.feeCategoryRule.findFirst({ where: { id, schoolId } });
+  if (!rule) throw new Error("This fee category no longer exists.");
+
   try {
-    await prisma.feeCategoryRule.delete({ where: { id } });
+    await prisma.feeCategoryRule.delete({ where: { id: rule.id } });
   } catch (error) {
     throw friendlyDbError(error, "Failed to delete fee category.");
   }
+
+  await logAudit({
+    actionType: "FEE_CATEGORY_DELETED",
+    targetEntity: "FeeCategoryRule",
+    targetId: rule.id,
+    details: rule.name,
+  });
 
   revalidatePath("/settings");
 }

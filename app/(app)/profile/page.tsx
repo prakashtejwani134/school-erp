@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
-import { Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { Building2, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { requireRouteAccess } from "@/lib/route-access";
 import { formatDisplayDate } from "@/lib/date";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -29,16 +28,19 @@ function titleCase(value: string) {
 }
 
 export default async function ProfilePage() {
-  const userId = await getSession();
-  if (!userId) redirect("/login");
+  const { user, role, schoolId } = await requireRouteAccess("profile");
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) redirect("/login");
+  const school = await prisma.school.findUnique({ where: { id: schoolId } });
 
   const contactDetails = [
     { icon: Mail, label: "Email", value: user.email },
     { icon: Phone, label: "Phone", value: user.phone ?? "—" },
-    { icon: ShieldCheck, label: "Role", value: user.role, badge: true },
+    { icon: ShieldCheck, label: "Role", value: role, badge: true },
+    {
+      icon: Building2,
+      label: "Active School",
+      value: school?.schoolName ?? "—",
+    },
     {
       icon: UserRound,
       label: "Member Since",
@@ -58,7 +60,7 @@ export default async function ProfilePage() {
             </Avatar>
             <div>
               <CardTitle className="text-xl">{user.name}</CardTitle>
-              <CardDescription>{titleCase(user.role)}</CardDescription>
+              <CardDescription>{titleCase(role)}</CardDescription>
             </div>
           </CardHeader>
         </Card>

@@ -3,12 +3,14 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { CollectFeeDialog } from "./collect-fee-dialog";
+import { collectFee } from "./actions";
+import type { CollectFeeInput, CollectFeeResult } from "./actions";
+import { CollectFeeSheet } from "./collect-fee-sheet";
 import { PendingDuesTable } from "./pending-dues-table";
 import { ReceiptHistoryTable } from "./receipt-history-table";
 import type {
@@ -17,6 +19,21 @@ import type {
   SchoolBranding,
   StudentOption,
 } from "./types";
+
+const AMOUNT_EPSILON = 0.01;
+
+function applyOptimisticPayment(
+  state: PendingDueRow[],
+  payload: { feeDueId: string; amount: number },
+): PendingDueRow[] {
+  return state.flatMap((due) => {
+    if (due.id !== payload.feeDueId) return [due];
+    const amountPaid = due.amountPaid + payload.amount;
+    const remainingAmount = due.totalAmount - amountPaid;
+    if (remainingAmount <= AMOUNT_EPSILON) return [];
+    return [{ ...due, amountPaid, remainingAmount }];
+  });
+}
 
 export function FeesClient({
   pendingDues,
@@ -39,6 +56,11 @@ export function FeesClient({
     studentId?: string;
     feeDueId?: string;
   }>({});
+  const [, startTransition] = React.useTransition();
+  const [optimisticDues, addOptimisticPayment] = React.useOptimistic(
+    pendingDues,
+    applyOptimisticPayment,
+  );
 
   function openDialog(pre?: { studentId?: string; feeDueId?: string }) {
     setPreselect(pre ?? {});
@@ -59,6 +81,19 @@ export function FeesClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  function handleCollect(input: CollectFeeInput): Promise<CollectFeeResult> {
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        addOptimisticPayment({ feeDueId: input.feeDueId, amount: input.amount });
+        try {
+          resolve(await collectFee(input));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
   function handleCollected(receiptId: string) {
     router.refresh();
     window.open(`/receipts/${receiptId}`, "_blank", "noopener,noreferrer");
@@ -66,7 +101,23 @@ export function FeesClient({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          render={<a href="/fees/structures/export" download />}
+        >
+          <Download />
+          Export Fee Structures
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          render={<a href="/fees/receipts/export" download />}
+        >
+          <Download />
+          Export Receipts
+        </Button>
         <Button onClick={() => openDialog()}>
           <Plus />
           Collect Fee
@@ -77,7 +128,7 @@ export function FeesClient({
         <TabsList>
           <TabsTrigger value="pending">
             Pending Dues
-            {pendingDues.length > 0 ? ` (${pendingDues.length})` : ""}
+            {optimisticDues.length > 0 ? ` (${optimisticDues.length})` : ""}
           </TabsTrigger>
           <TabsTrigger value="history">Receipt History</TabsTrigger>
         </TabsList>
@@ -88,7 +139,8 @@ export function FeesClient({
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
           >
             <PendingDuesTable
-              dues={pendingDues}
+              dues={optimisticDues}
+              schoolName={branding.schoolName}
               onCollect={(due) =>
                 openDialog({ studentId: due.studentId, feeDueId: due.id })
               }
@@ -106,7 +158,7 @@ export function FeesClient({
         </TabsContent>
       </Tabs>
 
-      <CollectFeeDialog
+      <CollectFeeSheet
         key={dialogKey}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -114,6 +166,7 @@ export function FeesClient({
         defaultCollectedBy={currentUserName}
         initialStudentId={preselect.studentId}
         initialFeeDueId={preselect.feeDueId}
+        onCollect={handleCollect}
         onCollected={handleCollected}
       />
     </div>

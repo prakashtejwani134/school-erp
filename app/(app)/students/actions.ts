@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { logAudit } from "@/lib/audit";
+import { requireActiveSchoolContext } from "@/lib/school-context";
 
 type StudentInput = {
   firstName: string;
@@ -56,40 +58,84 @@ function friendlyDbError(error: unknown, fallback: string): Error {
 }
 
 export async function createStudent(formData: FormData) {
+  const { schoolId } = await requireActiveSchoolContext();
   const data = parseStudentForm(formData);
 
+  const classBelongsToSchool = await prisma.class.count({
+    where: { id: data.classId, schoolId },
+  });
+  if (!classBelongsToSchool) throw new Error("Invalid class.");
+
+  let created;
   try {
-    await prisma.student.create({ data });
+    created = await prisma.student.create({ data: { ...data, schoolId } });
   } catch (error) {
     throw friendlyDbError(error, "Failed to create student.");
   }
+
+  await logAudit({
+    actionType: "STUDENT_CREATED",
+    targetEntity: "Student",
+    targetId: created.id,
+    details: `${data.firstName} ${data.lastName} (${data.admissionNo})`,
+  });
 
   revalidatePath("/students");
   revalidatePath("/dashboard");
 }
 
 export async function updateStudent(id: string, formData: FormData) {
+  const { schoolId } = await requireActiveSchoolContext();
   const data = parseStudentForm(formData);
 
+  const classBelongsToSchool = await prisma.class.count({
+    where: { id: data.classId, schoolId },
+  });
+  if (!classBelongsToSchool) throw new Error("Invalid class.");
+
+  let count: number;
   try {
-    await prisma.student.update({ where: { id }, data });
+    ({ count } = await prisma.student.updateMany({
+      where: { id, schoolId },
+      data,
+    }));
   } catch (error) {
     throw friendlyDbError(error, "Failed to update student.");
   }
+  if (count === 0) throw new Error("This student no longer exists.");
+
+  await logAudit({
+    actionType: "STUDENT_UPDATED",
+    targetEntity: "Student",
+    targetId: id,
+    details: `${data.firstName} ${data.lastName} (${data.admissionNo})`,
+  });
 
   revalidatePath("/students");
   revalidatePath("/dashboard");
 }
 
 export async function deleteStudent(id: string) {
+  const { schoolId } = await requireActiveSchoolContext();
+
+  const student = await prisma.student.findFirst({ where: { id, schoolId } });
+  if (!student) throw new Error("This student no longer exists.");
+
   try {
-    await prisma.student.delete({ where: { id } });
+    await prisma.student.delete({ where: { id: student.id } });
   } catch (error) {
     throw friendlyDbError(
       error,
       "Failed to delete student. They may have related fee or attendance records.",
     );
   }
+
+  await logAudit({
+    actionType: "STUDENT_DELETED",
+    targetEntity: "Student",
+    targetId: student.id,
+    details: `${student.firstName} ${student.lastName} (${student.admissionNo})`,
+  });
 
   revalidatePath("/students");
   revalidatePath("/dashboard");

@@ -45,154 +45,128 @@ const PAYMENT_MODES = [
   PaymentMode.CHEQUE,
 ] as const;
 
-async function main() {
-  console.log("Seeding database...");
+type StaffSpec = { name: string; email: string; phone: string };
+type ClassSpec = {
+  name: string;
+  section: string;
+  tuitionAmount: number;
+  examAmount: number;
+  students: { firstName: string; lastName: string; phone: string }[];
+};
 
-  // Clean slate — FK-safe delete order.
-  await prisma.feeReceipt.deleteMany();
-  await prisma.feeDue.deleteMany();
-  await prisma.attendance.deleteMany();
-  await prisma.student.deleteMany();
-  await prisma.feeStructure.deleteMany();
-  await prisma.class.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.user.deleteMany();
+type SchoolSpec = {
+  code: string;
+  schoolName: string;
+  address: string;
+  phone: string;
+  email: string;
+  currentAcademicYear: string;
+  admissionPrefix: string;
+  receiptPrefix: string;
+  teachers: StaffSpec[];
+  admin: StaffSpec;
+  parent: StaffSpec;
+  classes: ClassSpec[];
+};
 
-  // --- Users: 1 Director + 2 Teachers ---
-  const director = await prisma.user.create({
+/** Creates one school's users, classes, fee structures, students, dues/receipts, and attendance. Returns the school id so the caller can attach a shared Director membership. */
+async function seedSchool(spec: SchoolSpec) {
+  const school = await prisma.school.create({
     data: {
-      name: "Vikram Malhotra",
-      email: "director@greenwoodschool.edu",
-      phone: "+919810000001",
-      role: Role.DIRECTOR,
+      code: spec.code,
+      schoolName: spec.schoolName,
+      address: spec.address,
+      phone: spec.phone,
+      email: spec.email,
+      currency: "INR",
+      currentAcademicYear: spec.currentAcademicYear,
     },
   });
 
-  const teachers = await Promise.all([
-    prisma.user.create({
-      data: {
-        name: "Priya Desai",
-        email: "priya.desai@greenwoodschool.edu",
-        phone: "+919810000002",
-        role: Role.TEACHER,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        name: "Rohan Mehta",
-        email: "rohan.mehta@greenwoodschool.edu",
-        phone: "+919810000003",
-        role: Role.TEACHER,
-      },
-    }),
-  ]);
-
-  console.log(
-    `Created 1 director (${director.name}) and ${teachers.length} teachers`,
+  const teachers = await Promise.all(
+    spec.teachers.map((t) =>
+      prisma.user.create({
+        data: { name: t.name, email: t.email, phone: t.phone },
+      }),
+    ),
+  );
+  await Promise.all(
+    teachers.map((teacher) =>
+      prisma.userSchool.create({
+        data: { userId: teacher.id, schoolId: school.id, role: Role.TEACHER },
+      }),
+    ),
   );
 
-  // --- Classes ---
-  const class9A = await prisma.class.create({
-    data: { name: "9", section: "A" },
+  const admin = await prisma.user.create({
+    data: { name: spec.admin.name, email: spec.admin.email, phone: spec.admin.phone },
   });
-  const class10A = await prisma.class.create({
-    data: { name: "10", section: "A" },
+  await prisma.userSchool.create({
+    data: { userId: admin.id, schoolId: school.id, role: Role.ADMIN },
   });
 
-  console.log("Created classes: 9-A, 10-A");
+  const parent = await prisma.user.create({
+    data: { name: spec.parent.name, email: spec.parent.email, phone: spec.parent.phone },
+  });
+  await prisma.userSchool.create({
+    data: { userId: parent.id, schoolId: school.id, role: Role.PARENT },
+  });
 
-  // --- Fee Structures: Tuition + Exam Fee, per class ---
   const dueDate = firstOfNextMonth();
-
-  const fees9A = {
-    tuition: await prisma.feeStructure.create({
-      data: {
-        title: "Tuition Fee",
-        amount: 15000,
-        dueDate,
-        classId: class9A.id,
-      },
-    }),
-    exam: await prisma.feeStructure.create({
-      data: { title: "Exam Fee", amount: 2000, dueDate, classId: class9A.id },
-    }),
-  };
-
-  const fees10A = {
-    tuition: await prisma.feeStructure.create({
-      data: {
-        title: "Tuition Fee",
-        amount: 16000,
-        dueDate,
-        classId: class10A.id,
-      },
-    }),
-    exam: await prisma.feeStructure.create({
-      data: { title: "Exam Fee", amount: 2500, dueDate, classId: class10A.id },
-    }),
-  };
-
-  console.log("Created fee structures: Tuition Fee, Exam Fee (per class)");
-
-  // --- Students: 5 in Class 9-A, 5 in Class 10-A, Indian names ---
-  const class9AStudents = [
-    { firstName: "Aarav", lastName: "Sharma", phone: "+919820000001" },
-    { firstName: "Vivaan", lastName: "Gupta", phone: "+919820000002" },
-    { firstName: "Ishaan", lastName: "Verma", phone: "+919820000003" },
-    { firstName: "Aditya", lastName: "Kumar", phone: "+919820000004" },
-    { firstName: "Reyansh", lastName: "Singh", phone: "+919820000005" },
-  ];
-
-  const class10AStudents = [
-    { firstName: "Ananya", lastName: "Iyer", phone: "+919820000006" },
-    { firstName: "Diya", lastName: "Patel", phone: "+919820000007" },
-    { firstName: "Saanvi", lastName: "Reddy", phone: "+919820000008" },
-    { firstName: "Myra", lastName: "Nair", phone: "+919820000009" },
-    { firstName: "Anika", lastName: "Joshi", phone: "+919820000010" },
-  ];
 
   const students: {
     id: string;
-    firstName: string;
     fees: { tuition: { id: string; amount: number }; exam: { id: string; amount: number } };
   }[] = [];
 
-  let admissionCounter = 1;
+  for (const classSpec of spec.classes) {
+    const cls = await prisma.class.create({
+      data: { schoolId: school.id, name: classSpec.name, section: classSpec.section },
+    });
 
-  for (const s of class9AStudents) {
-    const student = await prisma.student.create({
+    const tuition = await prisma.feeStructure.create({
       data: {
-        admissionNo: `GWS-9A-${String(admissionCounter).padStart(3, "0")}`,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        parentPhone: s.phone,
-        classId: class9A.id,
-        isDiscounted: admissionCounter === 3,
+        schoolId: school.id,
+        title: "Tuition Fee",
+        amount: classSpec.tuitionAmount,
+        dueDate,
+        classId: cls.id,
       },
     });
-    students.push({ id: student.id, firstName: student.firstName, fees: fees9A });
-    admissionCounter++;
-  }
-
-  admissionCounter = 1;
-  for (const s of class10AStudents) {
-    const student = await prisma.student.create({
+    const exam = await prisma.feeStructure.create({
       data: {
-        admissionNo: `GWS-10A-${String(admissionCounter).padStart(3, "0")}`,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        parentPhone: s.phone,
-        classId: class10A.id,
-        isDiscounted: admissionCounter === 2,
+        schoolId: school.id,
+        title: "Exam Fee",
+        amount: classSpec.examAmount,
+        dueDate,
+        classId: cls.id,
       },
     });
-    students.push({ id: student.id, firstName: student.firstName, fees: fees10A });
-    admissionCounter++;
+
+    let admissionCounter = 1;
+    for (const s of classSpec.students) {
+      const student = await prisma.student.create({
+        data: {
+          schoolId: school.id,
+          admissionNo: `${spec.admissionPrefix}-${classSpec.name}${classSpec.section}-${String(admissionCounter).padStart(3, "0")}`,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          parentPhone: s.phone,
+          classId: cls.id,
+          isDiscounted: admissionCounter === 3,
+        },
+      });
+      students.push({ id: student.id, fees: { tuition, exam } });
+      admissionCounter++;
+    }
   }
 
-  console.log(`Created ${students.length} students`);
+  console.log(
+    `  ${spec.schoolName}: ${spec.classes.length} classes, ${students.length} students`,
+  );
 
-  // --- Fee Dues + Receipts: a mix of pending dues and paid (receipted) dues ---
+  // --- Fee Dues + Receipts: a mix of pending and paid, with a range of
+  // overdue days so the defaulter-risk engine has real variance to score. ---
   let receiptCounter = 1;
   let paidCount = 0;
   let pendingCount = 0;
@@ -201,7 +175,7 @@ async function main() {
     const student = students[i];
 
     // Tuition due — most are paid (7/10), rest pending.
-    const tuitionPaid = i < 7;
+    const tuitionPaid = i % 10 < 7;
     // Exam due — roughly half paid, half pending.
     const examPaid = i % 2 === 0;
 
@@ -210,17 +184,18 @@ async function main() {
       { structure: student.fees.exam, paid: examPaid },
     ];
 
-    for (const spec of dueSpecs) {
+    for (const dueSpec of dueSpecs) {
       const feeDue = await prisma.feeDue.create({
         data: {
+          schoolId: school.id,
           studentId: student.id,
-          feeStructureId: spec.structure.id,
-          dueAmount: spec.structure.amount,
-          isPaid: spec.paid,
+          feeStructureId: dueSpec.structure.id,
+          dueAmount: dueSpec.structure.amount,
+          isPaid: dueSpec.paid,
         },
       });
 
-      if (spec.paid) {
+      if (dueSpec.paid) {
         paidCount++;
         const paymentMode = PAYMENT_MODES[receiptCounter % PAYMENT_MODES.length];
         const collectedBy = teachers[receiptCounter % teachers.length].name;
@@ -230,10 +205,11 @@ async function main() {
 
         await prisma.feeReceipt.create({
           data: {
-            receiptNo: `RCPT-2026-${String(receiptCounter).padStart(4, "0")}`,
+            schoolId: school.id,
+            receiptNo: `${spec.receiptPrefix}-2026-${String(receiptCounter).padStart(4, "0")}`,
             studentId: student.id,
             feeDueId: feeDue.id,
-            paidAmount: spec.structure.amount,
+            paidAmount: dueSpec.structure.amount,
             paymentMode,
             collectedBy,
             transactionId: needsTransactionId
@@ -250,12 +226,13 @@ async function main() {
   }
 
   console.log(
-    `Created fee dues for all students (${paidCount} paid with receipts, ${pendingCount} pending)`,
+    `  ${spec.schoolName}: fee dues created (${paidCount} paid with receipts, ${pendingCount} pending)`,
   );
 
   // --- Attendance: past 7 days for every student ---
   const attendanceRows = students.flatMap((student) =>
     Array.from({ length: 7 }, (_, dayOffset) => ({
+      schoolId: school.id,
       studentId: student.id,
       date: daysAgo(dayOffset),
       status: randomAttendanceStatus(),
@@ -267,10 +244,137 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log(
-    `Created ${attendanceRows.length} attendance records (past 7 days x ${students.length} students)`,
-  );
+  console.log(`  ${spec.schoolName}: ${attendanceRows.length} attendance records`);
 
+  return school;
+}
+
+async function main() {
+  console.log("Seeding database...");
+
+  // Clean slate — FK-safe delete order.
+  await prisma.feeReceipt.deleteMany();
+  await prisma.feeDue.deleteMany();
+  await prisma.attendance.deleteMany();
+  await prisma.student.deleteMany();
+  await prisma.feeStructure.deleteMany();
+  await prisma.class.deleteMany();
+  await prisma.auditLog.deleteMany();
+  await prisma.feeCategoryRule.deleteMany();
+  await prisma.userSchool.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.school.deleteMany();
+
+  // The Director is shared across both schools, seeded once up front, so
+  // logging in as Director has a real switcher to demo.
+  const director = await prisma.user.create({
+    data: {
+      name: "Vikram Malhotra",
+      email: "director@greenwoodschool.edu",
+      phone: "+919810000001",
+    },
+  });
+
+  const greenwood = await seedSchool({
+    code: "GWS",
+    schoolName: "Greenwood School",
+    address: "12 MG Road, Mumbai, Maharashtra 400001",
+    phone: "+912212345678",
+    email: "info@greenwoodschool.edu",
+    currentAcademicYear: "2025-2026",
+    admissionPrefix: "GWS",
+    receiptPrefix: "RCPT-GWS",
+    teachers: [
+      { name: "Priya Desai", email: "priya.desai@greenwoodschool.edu", phone: "+919810000002" },
+      { name: "Rohan Mehta", email: "rohan.mehta@greenwoodschool.edu", phone: "+919810000003" },
+    ],
+    admin: { name: "Anita Rao", email: "accounts@greenwoodschool.edu", phone: "+919810000004" },
+    parent: { name: "Kavita Sharma", email: "kavita.sharma@example.com", phone: "+919820000101" },
+    classes: [
+      {
+        name: "9",
+        section: "A",
+        tuitionAmount: 15000,
+        examAmount: 2000,
+        students: [
+          { firstName: "Aarav", lastName: "Sharma", phone: "+919820000001" },
+          { firstName: "Vivaan", lastName: "Gupta", phone: "+919820000002" },
+          { firstName: "Ishaan", lastName: "Verma", phone: "+919820000003" },
+          { firstName: "Aditya", lastName: "Kumar", phone: "+919820000004" },
+          { firstName: "Reyansh", lastName: "Singh", phone: "+919820000005" },
+        ],
+      },
+      {
+        name: "10",
+        section: "A",
+        tuitionAmount: 16000,
+        examAmount: 2500,
+        students: [
+          { firstName: "Ananya", lastName: "Iyer", phone: "+919820000006" },
+          { firstName: "Diya", lastName: "Patel", phone: "+919820000007" },
+          { firstName: "Saanvi", lastName: "Reddy", phone: "+919820000008" },
+          { firstName: "Myra", lastName: "Nair", phone: "+919820000009" },
+          { firstName: "Anika", lastName: "Joshi", phone: "+919820000010" },
+        ],
+      },
+    ],
+  });
+
+  const riverside = await seedSchool({
+    code: "RIS",
+    schoolName: "Riverside International School",
+    address: "45 Residency Road, Bengaluru, Karnataka 560025",
+    phone: "+918022345678",
+    email: "info@riversideintl.edu",
+    currentAcademicYear: "2025-2026",
+    admissionPrefix: "RIS",
+    receiptPrefix: "RCPT-RIS",
+    teachers: [
+      { name: "Neha Kapoor", email: "neha.kapoor@riversideintl.edu", phone: "+918010000002" },
+      { name: "Arjun Nair", email: "arjun.nair@riversideintl.edu", phone: "+918010000003" },
+    ],
+    admin: { name: "Sunita Iyer", email: "accounts@riversideintl.edu", phone: "+918010000004" },
+    parent: { name: "Meera Pillai", email: "meera.pillai@example.com", phone: "+918020000101" },
+    classes: [
+      {
+        name: "8",
+        section: "A",
+        tuitionAmount: 18000,
+        examAmount: 2200,
+        students: [
+          { firstName: "Krishna", lastName: "Rao", phone: "+918020000001" },
+          { firstName: "Advait", lastName: "Bhat", phone: "+918020000002" },
+          { firstName: "Kabir", lastName: "Shetty", phone: "+918020000003" },
+          { firstName: "Arnav", lastName: "Hegde", phone: "+918020000004" },
+          { firstName: "Vihaan", lastName: "Kulkarni", phone: "+918020000005" },
+        ],
+      },
+      {
+        name: "9",
+        section: "B",
+        tuitionAmount: 19000,
+        examAmount: 2600,
+        students: [
+          { firstName: "Aadhya", lastName: "Menon", phone: "+918020000006" },
+          { firstName: "Sara", lastName: "D'Souza", phone: "+918020000007" },
+          { firstName: "Riya", lastName: "Poojary", phone: "+918020000008" },
+          { firstName: "Ira", lastName: "Achar", phone: "+918020000009" },
+          { firstName: "Navya", lastName: "Bhandari", phone: "+918020000010" },
+        ],
+      },
+    ],
+  });
+
+  await prisma.userSchool.createMany({
+    data: [
+      { userId: director.id, schoolId: greenwood.id, role: Role.DIRECTOR },
+      { userId: director.id, schoolId: riverside.id, role: Role.DIRECTOR },
+    ],
+  });
+
+  console.log(
+    `Created 2 schools (${greenwood.schoolName}, ${riverside.schoolName}), Director shared across both`,
+  );
   console.log("Seeding complete.");
 }
 

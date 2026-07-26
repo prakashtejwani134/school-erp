@@ -1,4 +1,5 @@
 import type { PaymentMode } from "@prisma/client";
+import type { DefaulterRisk } from "@/lib/analytics/defaulters";
 
 export type StudentOption = {
   id: string;
@@ -12,10 +13,14 @@ export type PendingDueRow = {
   studentId: string;
   studentName: string;
   admissionNo: string;
+  parentPhone: string;
   className: string;
   feeTitle: string;
-  dueAmount: number;
+  totalAmount: number;
+  amountPaid: number;
+  remainingAmount: number;
   dueDate: string;
+  risk: DefaulterRisk;
 };
 
 export type ReceiptRow = {
@@ -36,7 +41,9 @@ export type ReceiptRow = {
 export type StudentDue = {
   id: string;
   feeTitle: string;
-  dueAmount: number;
+  totalAmount: number;
+  amountPaid: number;
+  remainingAmount: number;
   dueDate: string;
 };
 

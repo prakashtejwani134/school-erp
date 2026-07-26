@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import type { Role } from "@prisma/client";
 import {
   CalendarCheck,
   GraduationCap,
@@ -23,27 +24,32 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { canAccess, type NavKey } from "@/lib/rbac";
 
-const NAV_ITEMS = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Students", href: "/students", icon: Users },
-  { title: "Classes", href: "/classes", icon: GraduationCap },
-  { title: "Attendance", href: "/attendance", icon: CalendarCheck },
-  { title: "Fees", href: "/fees", icon: IndianRupee },
-  { title: "Audit Logs", href: "/audit-logs", icon: ScrollText },
-  { title: "Settings", href: "/settings", icon: Settings },
-  { title: "Profile", href: "/profile", icon: UserRound },
+const NAV_ITEMS: { title: string; href: string; icon: typeof LayoutDashboard; key: NavKey }[] = [
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
+  { title: "Students", href: "/students", icon: Users, key: "students" },
+  { title: "Classes", href: "/classes", icon: GraduationCap, key: "classes" },
+  { title: "Attendance", href: "/attendance", icon: CalendarCheck, key: "attendance" },
+  { title: "Fees", href: "/fees", icon: IndianRupee, key: "fees" },
+  { title: "Audit Logs", href: "/audit-logs", icon: ScrollText, key: "auditLogs" },
+  { title: "Settings", href: "/settings", icon: Settings, key: "settings" },
+  { title: "Profile", href: "/profile", icon: UserRound, key: "profile" },
 ];
 
-const QUICK_ACTIONS = [
-  { title: "Add Student", href: "/students?action=new", icon: Plus },
-  { title: "Collect Fee", href: "/fees?action=collect", icon: Plus },
-  { title: "Mark Attendance", href: "/attendance", icon: CalendarCheck },
+const QUICK_ACTIONS: { title: string; href: string; icon: typeof Plus; key: NavKey }[] = [
+  { title: "Add Student", href: "/students?action=new", icon: Plus, key: "students" },
+  { title: "Collect Fee", href: "/fees?action=collect", icon: Plus, key: "fees" },
+  { title: "Mark Attendance", href: "/attendance", icon: CalendarCheck, key: "attendance" },
 ];
 
-export function CommandPalette() {
+export function CommandPalette({ role }: { role: Role }) {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
+  const visibleNavItems = NAV_ITEMS.filter((item) => canAccess(role, item.key));
+  const visibleQuickActions = QUICK_ACTIONS.filter((item) =>
+    canAccess(role, item.key),
+  );
 
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -68,7 +74,7 @@ export function CommandPalette() {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Quick actions">
-          {QUICK_ACTIONS.map((action) => (
+          {visibleQuickActions.map((action) => (
             <CommandItem
               key={action.title}
               value={action.title}
@@ -81,7 +87,7 @@ export function CommandPalette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Navigate">
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <CommandItem
               key={item.href}
               value={item.title}

@@ -36,9 +36,10 @@ export function AnimatedTableBody({
   );
 }
 
-/** Drop-in replacement for `TableRow` with a staggered entrance and a subtle hover slide. */
+/** Drop-in replacement for `TableRow` with a staggered entrance, a subtle hover slide, and — for clickable rows — a press-down tap cue. */
 export function AnimatedTableRow({
   className,
+  onClick,
   ...props
 }: ComponentProps<typeof motion.tr>) {
   return (
@@ -49,7 +50,9 @@ export function AnimatedTableRow({
         className,
       )}
       variants={rowVariants}
+      onClick={onClick}
       whileHover={{ x: 4 }}
+      whileTap={onClick ? { scale: 0.995 } : undefined}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       {...props}
     />

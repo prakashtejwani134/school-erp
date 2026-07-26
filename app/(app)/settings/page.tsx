@@ -1,33 +1,34 @@
 import { prisma } from "@/lib/prisma";
+import { requireRouteAccess } from "@/lib/route-access";
 import { SettingsClient } from "./settings-client";
 import type { FeeCategoryRuleRow, SchoolSettingsData } from "./types";
 
 export default async function SettingsPage() {
-  const settings = await prisma.schoolSettings.findFirst({
+  const { schoolId } = await requireRouteAccess("settings");
+
+  const school = await prisma.school.findUniqueOrThrow({
+    where: { id: schoolId },
     include: { feeCategories: { orderBy: { createdAt: "asc" } } },
   });
 
-  const schoolSettings: SchoolSettingsData | null = settings
-    ? {
-        id: settings.id,
-        schoolName: settings.schoolName,
-        logoUrl: settings.logoUrl,
-        address: settings.address,
-        phone: settings.phone,
-        email: settings.email,
-        currency: settings.currency,
-        currentAcademicYear: settings.currentAcademicYear,
-      }
-    : null;
+  const schoolSettings: SchoolSettingsData = {
+    id: school.id,
+    schoolName: school.schoolName,
+    logoUrl: school.logoUrl,
+    address: school.address,
+    phone: school.phone,
+    email: school.email,
+    currency: school.currency,
+    currentAcademicYear: school.currentAcademicYear,
+  };
 
-  const feeCategories: FeeCategoryRuleRow[] =
-    settings?.feeCategories.map((rule) => ({
-      id: rule.id,
-      name: rule.name,
-      amount: rule.amount,
-      frequency: rule.frequency,
-      lateFeePercentage: rule.lateFeePercentage,
-    })) ?? [];
+  const feeCategories: FeeCategoryRuleRow[] = school.feeCategories.map((rule) => ({
+    id: rule.id,
+    name: rule.name,
+    amount: rule.amount,
+    frequency: rule.frequency,
+    lateFeePercentage: rule.lateFeePercentage,
+  }));
 
   return (
     <SettingsClient schoolSettings={schoolSettings} feeCategories={feeCategories} />

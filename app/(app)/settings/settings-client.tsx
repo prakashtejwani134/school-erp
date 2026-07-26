@@ -40,7 +40,7 @@ const FREQUENCY_LABELS: Record<FeeCategoryRuleRow["frequency"], string> = {
 function SchoolDetailsForm({
   schoolSettings,
 }: {
-  schoolSettings: SchoolSettingsData | null;
+  schoolSettings: SchoolSettingsData;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
@@ -50,7 +50,7 @@ function SchoolDetailsForm({
     setError(null);
     startTransition(async () => {
       try {
-        await saveSchoolSettings(schoolSettings?.id ?? null, formData);
+        await saveSchoolSettings(formData);
         toast.success("School details saved");
         router.refresh();
       } catch (e) {
@@ -152,10 +152,8 @@ function SchoolDetailsForm({
 }
 
 function FeeCategoriesCard({
-  schoolSettingsId,
   feeCategories,
 }: {
-  schoolSettingsId: string | null;
   feeCategories: FeeCategoryRuleRow[];
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -182,85 +180,72 @@ function FeeCategoriesCard({
             Recurring fee rules used when generating dues.
           </CardDescription>
         </div>
-        <Button
-          size="sm"
-          onClick={() => openDialog(null)}
-          disabled={!schoolSettingsId}
-        >
+        <Button size="sm" onClick={() => openDialog(null)}>
           <Plus />
           Add category
         </Button>
       </CardHeader>
       <CardContent>
-        {!schoolSettingsId ? (
-          <p className="text-sm text-muted-foreground">
-            Save your school details first to start adding fee categories.
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Late fee</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {feeCategories.length ? (
-                  feeCategories.map((rule) => (
-                    <TableRow key={rule.id}>
-                      <TableCell className="font-medium">{rule.name}</TableCell>
-                      <TableCell>{FREQUENCY_LABELS[rule.frequency]}</TableCell>
-                      <TableCell>{rule.lateFeePercentage}%</TableCell>
-                      <TableCell className="text-right">
-                        {formatINR(rule.amount)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openDialog(rule)}
-                        >
-                          <Pencil />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeletingRule(rule)}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="py-8 text-center text-muted-foreground"
-                    >
-                      No fee categories yet.
+        <div className="overflow-hidden rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Frequency</TableHead>
+                <TableHead>Late fee</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {feeCategories.length ? (
+                feeCategories.map((rule) => (
+                  <TableRow key={rule.id}>
+                    <TableCell className="font-medium">{rule.name}</TableCell>
+                    <TableCell>{FREQUENCY_LABELS[rule.frequency]}</TableCell>
+                    <TableCell>{rule.lateFeePercentage}%</TableCell>
+                    <TableCell className="text-right">
+                      {formatINR(rule.amount)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openDialog(rule)}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeletingRule(rule)}
+                      >
+                        <Trash2 />
+                      </Button>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    No fee categories yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
 
-      {schoolSettingsId ? (
-        <FeeCategoryDialog
-          key={dialogKey}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          schoolSettingsId={schoolSettingsId}
-          rule={editingRule}
-        />
-      ) : null}
+      <FeeCategoryDialog
+        key={dialogKey}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        rule={editingRule}
+      />
 
       <DeleteFeeCategoryDialog
         rule={deletingRule}
@@ -276,16 +261,13 @@ export function SettingsClient({
   schoolSettings,
   feeCategories,
 }: {
-  schoolSettings: SchoolSettingsData | null;
+  schoolSettings: SchoolSettingsData;
   feeCategories: FeeCategoryRuleRow[];
 }) {
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <SchoolDetailsForm schoolSettings={schoolSettings} />
-      <FeeCategoriesCard
-        schoolSettingsId={schoolSettings?.id ?? null}
-        feeCategories={feeCategories}
-      />
+      <FeeCategoriesCard feeCategories={feeCategories} />
     </div>
   );
 }

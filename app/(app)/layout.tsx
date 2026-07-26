@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getActiveSchoolContext } from "@/lib/school-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { PageTransition } from "@/components/page-transition";
@@ -13,22 +13,38 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const userId = await getSession();
-  if (!userId) redirect("/login");
+  const context = await getActiveSchoolContext();
+  if (!context) redirect("/login");
 
-  const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+  const [currentUser, memberships] = await Promise.all([
+    prisma.user.findUnique({ where: { id: context.userId } }),
+    prisma.userSchool.findMany({
+      where: { userId: context.userId },
+      include: { school: true },
+      orderBy: { school: { schoolName: "asc" } },
+    }),
+  ]);
   if (!currentUser) redirect("/login");
 
   const user = {
     name: currentUser.name,
     email: currentUser.email,
-    role: currentUser.role,
+    role: context.role,
   };
+
+  const schools = memberships.map((m) => ({
+    id: m.schoolId,
+    name: m.school.schoolName,
+  }));
 
   return (
     <SidebarProvider>
-      <CommandPalette />
-      <AppSidebar />
+      <CommandPalette role={context.role} />
+      <AppSidebar
+        role={context.role}
+        schools={schools}
+        activeSchoolId={context.schoolId}
+      />
       <SidebarInset>
         <SiteHeader user={user} />
         <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">

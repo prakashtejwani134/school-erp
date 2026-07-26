@@ -1,13 +1,32 @@
-import { ScrollText } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { requireRouteAccess } from "@/lib/route-access";
+import { AuditLogTable } from "./audit-log-table";
+import type { AuditLogEntry } from "./types";
 
-import { PlaceholderPage } from "@/components/placeholder-page";
+async function getAuditLogs(schoolId: string): Promise<AuditLogEntry[]> {
+  const logs = await prisma.auditLog.findMany({
+    where: { schoolId },
+    include: { user: true },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
 
-export default function AuditLogsPage() {
-  return (
-    <PlaceholderPage
-      title="Audit Logs"
-      description="A record of who did what, and when, will live here."
-      icon={ScrollText}
-    />
-  );
+  return logs.map((log) => ({
+    id: log.id,
+    actionType: log.actionType,
+    targetEntity: log.targetEntity,
+    targetId: log.targetId,
+    details: log.details,
+    createdAt: log.createdAt.toISOString(),
+    userName: log.user.name,
+    ipAddress: log.ipAddress,
+  }));
+}
+
+export default async function AuditLogsPage() {
+  const { schoolId } = await requireRouteAccess("auditLogs");
+
+  const logs = await getAuditLogs(schoolId);
+
+  return <AuditLogTable logs={logs} />;
 }

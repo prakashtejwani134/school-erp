@@ -36,12 +36,10 @@ const FREQUENCY_OPTIONS: { value: FeeFrequency; label: string }[] = [
 export function FeeCategoryDialog({
   open,
   onOpenChange,
-  schoolSettingsId,
   rule,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  schoolSettingsId: string;
   rule: FeeCategoryRuleRow | null;
 }) {
   const router = useRouter();
@@ -61,7 +59,7 @@ export function FeeCategoryDialog({
           await updateFeeCategoryRule(rule.id, formData);
           toast.success("Fee category updated");
         } else {
-          await createFeeCategoryRule(schoolSettingsId, formData);
+          await createFeeCategoryRule(formData);
           toast.success("Fee category added");
         }
         onOpenChange(false);

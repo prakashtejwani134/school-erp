@@ -6,13 +6,13 @@ import type { PaymentMode } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,25 +23,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatINR } from "@/lib/currency";
+import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
 
-import { collectFee, getStudentDues } from "./actions";
+import { getStudentDues } from "./actions";
+import type { CollectFeeInput, CollectFeeResult } from "./actions";
 import type { StudentDue, StudentOption } from "./types";
 
-const PAYMENT_MODE_OPTIONS: { value: PaymentMode; label: string }[] = [
-  { value: "CASH", label: "Cash" },
-  { value: "UPI", label: "UPI" },
-  { value: "CHEQUE", label: "Cheque" },
-];
-
 const REFERENCE_REQUIRED: PaymentMode[] = ["UPI"];
+const AMOUNT_EPSILON = 0.01;
 
-export function CollectFeeDialog({
+export function CollectFeeSheet({
   open,
   onOpenChange,
   students,
   defaultCollectedBy,
   initialStudentId,
   initialFeeDueId,
+  onCollect,
   onCollected,
 }: {
   open: boolean;
@@ -50,12 +48,14 @@ export function CollectFeeDialog({
   defaultCollectedBy: string;
   initialStudentId?: string;
   initialFeeDueId?: string;
+  onCollect: (input: CollectFeeInput) => Promise<CollectFeeResult>;
   onCollected: (receiptId: string) => void;
 }) {
   const [studentId, setStudentId] = React.useState(initialStudentId ?? "");
   const [dues, setDues] = React.useState<StudentDue[]>([]);
   const [duesLoading, setDuesLoading] = React.useState(false);
   const [feeDueId, setFeeDueId] = React.useState(initialFeeDueId ?? "");
+  const [amount, setAmount] = React.useState("");
   const [paymentMode, setPaymentMode] = React.useState<PaymentMode>("CASH");
   const [transactionId, setTransactionId] = React.useState("");
   const [collectedBy, setCollectedBy] = React.useState(defaultCollectedBy);
@@ -73,11 +73,13 @@ export function CollectFeeDialog({
       try {
         const result = await getStudentDues(id);
         setDues(result);
-        setFeeDueId(
+        const selected =
           preselect && result.some((d) => d.id === preselect)
             ? preselect
-            : (result[0]?.id ?? ""),
-        );
+            : (result[0]?.id ?? "");
+        setFeeDueId(selected);
+        const selectedDue = result.find((d) => d.id === selected);
+        setAmount(selectedDue ? String(selectedDue.remainingAmount) : "");
       } catch {
         toast.error("Failed to load dues for this student.");
         setDues([]);
@@ -95,7 +97,7 @@ export function CollectFeeDialog({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       loadDues(initialStudentId, initialFeeDueId);
     }
-    // Runs once per mount — the parent remounts this dialog (via key) on every open.
+    // Runs once per mount — the parent remounts this sheet (via key) on every open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -105,13 +107,35 @@ export function CollectFeeDialog({
     loadDues(value);
   }
 
+  function handleDueChange(id: string) {
+    setFeeDueId(id);
+    setError(null);
+    const selectedDue = dues.find((d) => d.id === id);
+    setAmount(selectedDue ? String(selectedDue.remainingAmount) : "");
+  }
+
   const referenceRequired = REFERENCE_REQUIRED.includes(paymentMode);
   const selectedDue = dues.find((d) => d.id === feeDueId) ?? null;
+  const amountValue = Number(amount);
+  const isPartial =
+    selectedDue !== null && amountValue > 0
+      ? amountValue < selectedDue.remainingAmount - AMOUNT_EPSILON
+      : false;
 
   function handleSubmit() {
     setError(null);
-    if (!feeDueId) {
+    if (!feeDueId || !selectedDue) {
       setError("Select a pending due to collect.");
+      return;
+    }
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      setError("Enter a valid payment amount.");
+      return;
+    }
+    if (amountValue > selectedDue.remainingAmount + AMOUNT_EPSILON) {
+      setError(
+        `Amount can't exceed the remaining due of ${formatINR(selectedDue.remainingAmount)}.`,
+      );
       return;
     }
     if (referenceRequired && !transactionId.trim()) {
@@ -120,13 +144,19 @@ export function CollectFeeDialog({
     }
     startTransition(async () => {
       try {
-        const { receiptId, receiptNo } = await collectFee({
-          feeDueId,
-          paymentMode,
-          transactionId,
-          collectedBy,
-        });
-        toast.success(`Fee collected — receipt ${receiptNo}`);
+        const { receiptId, receiptNo, remainingAmount, isFullyPaid } =
+          await onCollect({
+            feeDueId,
+            amount: amountValue,
+            paymentMode,
+            transactionId,
+            collectedBy,
+          });
+        toast.success(
+          isFullyPaid
+            ? `Fee collected — receipt ${receiptNo}`
+            : `Partial payment recorded — receipt ${receiptNo} (${formatINR(remainingAmount)} remaining)`,
+        );
         onOpenChange(false);
         onCollected(receiptId);
       } catch (e) {
@@ -136,16 +166,16 @@ export function CollectFeeDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Collect Fee</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Collect Fee</SheetTitle>
+          <SheetDescription>
             Select a student to view their pending dues and record a payment.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="grid gap-4 py-2">
+        <div className="flex flex-col gap-4 overflow-y-auto px-4">
           <div className="grid gap-2">
             <Label htmlFor="student">Student</Label>
             <Select
@@ -193,18 +223,21 @@ export function CollectFeeDialog({
                           name="feeDueId"
                           value={due.id}
                           checked={feeDueId === due.id}
-                          onChange={() => setFeeDueId(due.id)}
+                          onChange={() => handleDueChange(due.id)}
                           className="accent-primary"
                         />
                         <span>
                           <span className="font-medium">{due.feeTitle}</span>
                           <span className="block text-xs text-muted-foreground">
                             Due {due.dueDate}
+                            {due.amountPaid > 0
+                              ? ` · ${formatINR(due.amountPaid)} already paid`
+                              : ""}
                           </span>
                         </span>
                       </span>
                       <span className="font-medium tabular-nums">
-                        {formatINR(due.dueAmount)}
+                        {formatINR(due.remainingAmount)}
                       </span>
                     </label>
                   ))}
@@ -228,23 +261,46 @@ export function CollectFeeDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {PAYMENT_MODE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
+                      {(
+                        Object.entries(PAYMENT_MODE_LABELS) as [
+                          PaymentMode,
+                          string,
+                        ][]
+                      ).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="amount">
+                    Amount
+                    <span className="text-muted-foreground">
+                      {" "}
+                      (of {formatINR(selectedDue.remainingAmount)})
+                    </span>
+                  </Label>
                   <Input
                     id="amount"
-                    value={formatINR(selectedDue.dueAmount)}
-                    disabled
+                    type="number"
+                    inputMode="decimal"
+                    min={0.01}
+                    max={selectedDue.remainingAmount}
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                   />
                 </div>
               </div>
+
+              {isPartial ? (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Partial payment — {formatINR(selectedDue.remainingAmount - amountValue)}{" "}
+                  will remain due after this payment.
+                </p>
+              ) : null}
 
               <div className="grid gap-2">
                 <Label htmlFor="transactionId">
@@ -279,7 +335,7 @@ export function CollectFeeDialog({
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
 
-        <DialogFooter>
+        <SheetFooter className="flex-row justify-end border-t bg-muted/50">
           <Button
             type="button"
             variant="outline"
@@ -294,8 +350,8 @@ export function CollectFeeDialog({
           >
             {isPending ? "Collecting..." : "Collect & Generate Receipt"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

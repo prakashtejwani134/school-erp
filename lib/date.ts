@@ -35,3 +35,34 @@ export function formatDisplayDateTime(date: Date): string {
     minute: "2-digit",
   });
 }
+
+const RELATIVE_UNITS: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] = [
+  { unit: "year", seconds: 31536000 },
+  { unit: "month", seconds: 2592000 },
+  { unit: "week", seconds: 604800 },
+  { unit: "day", seconds: 86400 },
+  { unit: "hour", seconds: 3600 },
+  { unit: "minute", seconds: 60 },
+];
+
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("en", {
+  numeric: "auto",
+});
+
+export function formatRelativeTime(date: Date, now: Date = new Date()): string {
+  const diffSeconds = Math.round((date.getTime() - now.getTime()) / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+
+  if (absSeconds < 60) return "just now";
+
+  for (const { unit, seconds } of RELATIVE_UNITS) {
+    if (absSeconds >= seconds) {
+      return relativeTimeFormatter.format(
+        Math.round(diffSeconds / seconds),
+        unit,
+      );
+    }
+  }
+
+  return relativeTimeFormatter.format(Math.round(diffSeconds / 60), "minute");
+}

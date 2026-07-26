@@ -27,11 +27,13 @@ export function DataTable<TData, TValue>({
   data,
   getRowId,
   renderRowDetail,
+  emptyMessage = "No results found.",
 }: {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   getRowId?: (row: TData) => string;
   renderRowDetail?: (row: TData) => React.ReactNode;
+  emptyMessage?: string;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
@@ -100,7 +102,7 @@ export function DataTable<TData, TValue>({
                 colSpan={columns.length}
                 className="h-24 text-center text-muted-foreground"
               >
-                No students found.
+                {emptyMessage}
               </TableCell>
             </TableRow>
           )}

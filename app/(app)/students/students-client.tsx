@@ -129,6 +129,7 @@ export function StudentsClient({
         data={filtered}
         getRowId={(student) => student.id}
         renderRowDetail={(student) => <StudentRowDetail student={student} />}
+        emptyMessage="No students found."
       />
 
       <StudentFormDialog

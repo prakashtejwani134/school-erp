@@ -94,9 +94,11 @@ function AttendanceFilters({
 function AttendanceMarkingList({
   students,
   selectedDate,
+  classLabel,
 }: {
   students: StudentAttendanceRow[];
   selectedDate: string;
+  classLabel: string;
 }) {
   const router = useRouter();
   const [statuses, setStatuses] = React.useState<
@@ -124,6 +126,7 @@ function AttendanceMarkingList({
         await saveAttendance(
           selectedDate,
           students.map((s) => ({ studentId: s.id, status: statuses[s.id] })),
+          classLabel,
         );
         toast.success("Attendance saved");
         router.refresh();
@@ -212,6 +215,11 @@ export function AttendanceClient({
   selectedDate: string;
   students: StudentAttendanceRow[];
 }) {
+  const selectedClass = classes.find((c) => c.id === selectedClassId);
+  const classLabel = selectedClass
+    ? `${selectedClass.name}-${selectedClass.section}`
+    : "Unknown";
+
   return (
     <div className="flex flex-col gap-4">
       <AttendanceFilters
@@ -223,6 +231,7 @@ export function AttendanceClient({
         key={`${selectedClassId}-${selectedDate}`}
         students={students}
         selectedDate={selectedDate}
+        classLabel={classLabel}
       />
     </div>
   );

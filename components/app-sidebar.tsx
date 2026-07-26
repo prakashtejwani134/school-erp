@@ -3,13 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Role } from "@prisma/client";
 import {
   CalendarCheck,
   GraduationCap,
   IndianRupee,
   LayoutDashboard,
   ScrollText,
-  School,
   Settings,
   Users,
 } from "lucide-react";
@@ -27,41 +27,43 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { canAccess, type NavKey } from "@/lib/rbac";
+import { SchoolSwitcher, type SchoolOption } from "@/components/school-switcher";
 
-const navItems = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Students", href: "/students", icon: Users },
-  { title: "Classes", href: "/classes", icon: GraduationCap },
-  { title: "Attendance", href: "/attendance", icon: CalendarCheck },
-  { title: "Fees", href: "/fees", icon: IndianRupee },
-  { title: "Audit Logs", href: "/audit-logs", icon: ScrollText },
-  { title: "Settings", href: "/settings", icon: Settings },
+const navItems: {
+  title: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  key: NavKey;
+}[] = [
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
+  { title: "Students", href: "/students", icon: Users, key: "students" },
+  { title: "Classes", href: "/classes", icon: GraduationCap, key: "classes" },
+  { title: "Attendance", href: "/attendance", icon: CalendarCheck, key: "attendance" },
+  { title: "Fees", href: "/fees", icon: IndianRupee, key: "fees" },
+  { title: "Audit Logs", href: "/audit-logs", icon: ScrollText, key: "auditLogs" },
+  { title: "Settings", href: "/settings", icon: Settings, key: "settings" },
 ];
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  role,
+  schools,
+  activeSchoolId,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  role: Role;
+  schools: SchoolOption[];
+  activeSchoolId: string;
+}) {
   const pathname = usePathname();
+  const visibleNavItems = navItems.filter((item) => canAccess(role, item.key));
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={
-                <Link href="/dashboard">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <School className="size-4" />
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">Greenwood School</span>
-                    <span className="text-xs text-muted-foreground">
-                      ERP Console
-                    </span>
-                  </div>
-                </Link>
-              }
-            />
+            <SchoolSwitcher schools={schools} activeSchoolId={activeSchoolId} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -70,7 +72,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const isActive =
                   pathname === item.href || pathname.startsWith(item.href + "/");
                 return (

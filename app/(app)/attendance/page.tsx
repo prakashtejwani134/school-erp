@@ -4,15 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { PlaceholderPage } from "@/components/placeholder-page";
 import { AttendanceClient } from "./attendance-client";
 import { parseDateParam, todayParam } from "@/lib/date";
+import { requireRouteAccess } from "@/lib/route-access";
 
 export default async function AttendancePage({
   searchParams,
 }: {
   searchParams: Promise<{ classId?: string; date?: string }>;
 }) {
+  const { schoolId } = await requireRouteAccess("attendance");
+
   const params = await searchParams;
 
   const classes = await prisma.class.findMany({
+    where: { schoolId },
     orderBy: [{ name: "asc" }, { section: "asc" }],
   });
 
@@ -34,7 +38,7 @@ export default async function AttendancePage({
   const dateObj = parseDateParam(selectedDate);
 
   const students = await prisma.student.findMany({
-    where: { classId: selectedClassId },
+    where: { schoolId, classId: selectedClassId },
     orderBy: [{ firstName: "asc" }],
     include: {
       attendances: {

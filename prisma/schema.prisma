@@ -18,26 +18,49 @@ model User {
   name      String
   email     String   @unique
   phone     String?
-  role      Role     @default(ADMIN)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  schools   UserSchool[]
   auditLogs AuditLog[]
 
-  @@index([email, role])
+  @@index([email])
+}
+
+/// Per-user, per-school membership — a user can belong to more than one
+/// school (branch), and their role can differ between them (e.g. Director
+/// at one campus, Teacher at another).
+model UserSchool {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, schoolId])
+  @@index([schoolId])
+  @@index([userId, role])
 }
 
 model Class {
   id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   name      String
   section   String
   createdAt DateTime @default(now())
 
   students Student[]
+
+  @@index([schoolId])
 }
 
 model Student {
   id           String   @id @default(uuid())
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   admissionNo  String   @unique
   firstName    String
   lastName     String
@@ -52,7 +75,7 @@ model Student {
   feeReceipts FeeReceipt[]
   attendances Attendance[]
 
-  @@index([classId])
+  @@index([schoolId, classId])
   @@index([admissionNo])
 }
 
@@ -65,6 +88,8 @@ enum PaymentMode {
 
 model FeeStructure {
   id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   title     String
   amount    Float
   dueDate   DateTime
@@ -72,24 +97,32 @@ model FeeStructure {
   createdAt DateTime @default(now())
 
   feeDues FeeDue[]
+
+  @@index([schoolId])
 }
 
 model FeeDue {
   id             String       @id @default(uuid())
+  schoolId       String
+  school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentId      String
   student        Student      @relation(fields: [studentId], references: [id])
   feeStructureId String
   feeStructure   FeeStructure @relation(fields: [feeStructureId], references: [id])
   dueAmount      Float
+  amountPaid     Float        @default(0)
   isPaid         Boolean      @default(false)
 
   feeReceipts FeeReceipt[]
 
   @@index([studentId, isPaid])
+  @@index([schoolId, isPaid])
 }
 
 model FeeReceipt {
   id            String      @id @default(uuid())
+  schoolId      String
+  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   receiptNo     String      @unique
   studentId     String
   student       Student     @relation(fields: [studentId], references: [id])
@@ -103,6 +136,7 @@ model FeeReceipt {
 
   @@index([studentId])
   @@index([createdAt])
+  @@index([schoolId, createdAt])
 }
 
 enum AttendanceStatus {
@@ -114,6 +148,8 @@ enum AttendanceStatus {
 
 model Attendance {
   id        String           @id @default(uuid())
+  schoolId  String
+  school    School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentId String
   student   Student          @relation(fields: [studentId], references: [id])
   date      DateTime         @db.Date
@@ -121,23 +157,48 @@ model Attendance {
 
   @@unique([studentId, date])
   @@index([date])
+  @@index([schoolId, date])
+}
+
+enum AuditActionType {
+  FEE_COLLECTED
+  STUDENT_CREATED
+  STUDENT_UPDATED
+  STUDENT_DELETED
+  ATTENDANCE_MARKED
+  SETTINGS_UPDATED
+  FEE_CATEGORY_CREATED
+  FEE_CATEGORY_UPDATED
+  FEE_CATEGORY_DELETED
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String
-  details   String
-  ipAddress String?
-  createdAt DateTime @default(now())
+  id           String          @id @default(uuid())
+  schoolId     String
+  school       School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  actionType   AuditActionType
+  targetEntity String
+  targetId     String?
+  details      String
+  ipAddress    String?
+  createdAt    DateTime        @default(now())
 
   @@index([userId])
   @@index([createdAt])
+  @@index([actionType])
+  @@index([targetEntity])
+  @@index([schoolId, createdAt])
 }
 
-model SchoolSettings {
+/// The tenant root. Every school-owned row hangs off this via `schoolId`.
+model School {
   id                  String   @id @default(cuid())
+  /// Short unique slug (e.g. "GWS") used to namespace human-facing sequences
+  /// like receipt numbers, so two schools' locally-counted sequences can
+  /// never collide on the global `FeeReceipt.receiptNo` unique constraint.
+  code                String   @unique
   schoolName          String
   logoUrl             String?
   address             String
@@ -148,6 +209,14 @@ model SchoolSettings {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  memberships   UserSchool[]
+  classes       Class[]
+  students      Student[]
+  feeStructures FeeStructure[]
+  feeDues       FeeDue[]
+  feeReceipts   FeeReceipt[]
+  attendances   Attendance[]
+  auditLogs     AuditLog[]
   feeCategories FeeCategoryRule[]
 }
 
@@ -158,14 +227,14 @@ enum FeeFrequency {
 }
 
 model FeeCategoryRule {
-  id                String         @id @default(cuid())
-  schoolSettingsId  String
-  schoolSettings    SchoolSettings @relation(fields: [schoolSettingsId], references: [id], onDelete: Cascade)
+  id                String       @id @default(cuid())
+  schoolId          String
+  school            School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   name              String
   amount            Float
   frequency         FeeFrequency
-  lateFeePercentage Float          @default(0.0)
-  createdAt         DateTime       @default(now())
+  lateFeePercentage Float        @default(0.0)
+  createdAt         DateTime     @default(now())
 
-  @@index([schoolSettingsId])
+  @@index([schoolId])
 }
