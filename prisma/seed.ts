@@ -105,6 +105,28 @@ async function seedSchool(spec: SchoolSpec) {
     data: { userId: admin.id, schoolId: school.id, role: Role.ADMIN },
   });
 
+  // --- Circulars: a couple of recent, realistic notices so the parent
+  // portal's "New Circulars" attention card and /parent/circulars page have
+  // real content to show instead of an empty state. ---
+  await prisma.circular.createMany({
+    data: [
+      {
+        schoolId: school.id,
+        title: "PTM Scheduled for Friday",
+        body: "A Parent-Teacher Meeting for all classes will be held this Friday from 9:00 AM to 12:00 PM. Please collect your ward's progress report from the class teacher.",
+        createdBy: admin.id,
+        publishedAt: daysAgo(1),
+      },
+      {
+        schoolId: school.id,
+        title: "Annual Sports Day Notice",
+        body: "The Annual Sports Day will be held on the school grounds next week. Students should report in their house colors by 7:30 AM. Parents are welcome to attend.",
+        createdBy: admin.id,
+        publishedAt: daysAgo(3),
+      },
+    ],
+  });
+
   const parent = await prisma.user.create({
     data: { name: spec.parent.name, email: spec.parent.email, phone: spec.parent.phone },
   });
@@ -326,9 +348,31 @@ async function main() {
   const kavitaSharma = await prisma.user.findUniqueOrThrow({
     where: { email: "kavita.sharma@example.com" },
   });
-  await prisma.student.update({
+  const aaravSharma = await prisma.student.update({
     where: { admissionNo: "GWS-9A-001" },
     data: { guardianId: kavitaSharma.id },
+  });
+
+  // Override Aarav's random attendance with a fixed mix below the 85%
+  // threshold and a 3-day absence streak ending today, so the parent
+  // portal's AttentionStrip has a real low-attendance card to demo.
+  await prisma.attendance.deleteMany({ where: { studentId: aaravSharma.id } });
+  const aaravAttendanceStatuses: AttendanceStatus[] = [
+    AttendanceStatus.ABSENT, // today
+    AttendanceStatus.ABSENT, // yesterday
+    AttendanceStatus.ABSENT,
+    AttendanceStatus.PRESENT,
+    AttendanceStatus.PRESENT,
+    AttendanceStatus.PRESENT,
+    AttendanceStatus.PRESENT,
+  ];
+  await prisma.attendance.createMany({
+    data: aaravAttendanceStatuses.map((status, dayOffset) => ({
+      schoolId: greenwood.id,
+      studentId: aaravSharma.id,
+      date: daysAgo(dayOffset),
+      status,
+    })),
   });
 
   const riverside = await seedSchool({
