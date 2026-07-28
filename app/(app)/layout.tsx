@@ -15,6 +15,7 @@ export default async function AppLayout({
 }) {
   const context = await getActiveSchoolContext();
   if (!context) redirect("/login");
+  if (context.role === "PARENT") redirect("/parent");
 
   const [currentUser, memberships] = await Promise.all([
     prisma.user.findUnique({ where: { id: context.userId } }),

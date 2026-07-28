@@ -320,6 +320,17 @@ async function main() {
     ],
   });
 
+  // Link Kavita Sharma (Greenwood's seeded parent) to her son Aarav Sharma,
+  // so the parent-portal auth flow (guardianId lookup) has a real row to
+  // resolve during local/dev testing.
+  const kavitaSharma = await prisma.user.findUniqueOrThrow({
+    where: { email: "kavita.sharma@example.com" },
+  });
+  await prisma.student.update({
+    where: { admissionNo: "GWS-9A-001" },
+    data: { guardianId: kavitaSharma.id },
+  });
+
   const riverside = await seedSchool({
     code: "RIS",
     schoolName: "Riverside International School",

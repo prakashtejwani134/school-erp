@@ -18,7 +18,7 @@ const ROLE_OPTIONS: { role: Role; label: string; description: string }[] = [
   { role: "DIRECTOR", label: "Director", description: "Full access" },
   { role: "ADMIN", label: "Admin", description: "Students & Fees" },
   { role: "TEACHER", label: "Teacher", description: "Classes & Attendance" },
-  { role: "PARENT", label: "Parent", description: "Dashboard only" },
+  { role: "PARENT", label: "Parent", description: "Parent portal" },
 ];
 
 export default async function LoginPage() {

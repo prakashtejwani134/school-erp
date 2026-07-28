@@ -25,5 +25,5 @@ export async function loginAs(role: Role) {
   }
 
   await createSession(membership.userId, membership.schoolId);
-  redirect("/dashboard");
+  redirect(role === "PARENT" ? "/parent" : "/dashboard");
 }

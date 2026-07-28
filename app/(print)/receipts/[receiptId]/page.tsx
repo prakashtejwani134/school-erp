@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { formatDisplayDateTime } from "@/lib/date";
 import { formatINR } from "@/lib/currency";
 import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
-import { requireRouteAccess } from "@/lib/route-access";
+import { canAccess } from "@/lib/rbac";
+import { getActiveSchoolContext } from "@/lib/school-context";
 import { PrintButton } from "./print-button";
 
 /** Scoped to the caller's active school — a receipt id from another tenant resolves to nothing, not someone else's data. */
@@ -26,8 +27,9 @@ export async function generateMetadata({
   params: Promise<{ receiptId: string }>;
 }): Promise<Metadata> {
   const { receiptId } = await params;
-  const { schoolId } = await requireRouteAccess("fees");
-  const receipt = await getReceipt(receiptId, schoolId);
+  const context = await getActiveSchoolContext();
+  if (!context) return { title: "Receipt" };
+  const receipt = await getReceipt(receiptId, context.schoolId);
   return { title: receipt ? `Receipt ${receipt.receiptNo}` : "Receipt not found" };
 }
 
@@ -37,10 +39,21 @@ export default async function ReceiptPrintPage({
   params: Promise<{ receiptId: string }>;
 }) {
   const { receiptId } = await params;
-  const { schoolId } = await requireRouteAccess("fees");
-  const receipt = await getReceipt(receiptId, schoolId);
+  const context = await getActiveSchoolContext();
+  if (!context) redirect("/login");
 
+  const receipt = await getReceipt(receiptId, context.schoolId);
   if (!receipt) notFound();
+
+  // Staff with fee-collection access can view any receipt at their school;
+  // a parent may only view their own child's — this never opens receipts
+  // up to parents at large, and staff access is unchanged from before.
+  const isStaff = canAccess(context.role, "fees");
+  const isGuardian =
+    context.role === "PARENT" && receipt.student.guardianId === context.userId;
+  if (!isStaff && !isGuardian) {
+    redirect(context.role === "PARENT" ? "/parent" : "/dashboard");
+  }
 
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-6 print:p-0">

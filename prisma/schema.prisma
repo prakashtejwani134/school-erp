@@ -21,8 +21,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  schools   UserSchool[]
-  auditLogs AuditLog[]
+  schools    UserSchool[]
+  auditLogs  AuditLog[]
+  /// Students this user is the parent/guardian of (see `Student.guardianId`).
+  guardianOf Student[]
+  circulars  Circular[]
+  homework   Homework[]
 
   @@index([email])
 }
@@ -53,6 +57,7 @@ model Class {
   createdAt DateTime @default(now())
 
   students Student[]
+  homework Homework[]
 
   @@index([schoolId])
 }
@@ -71,12 +76,19 @@ model Student {
   isDiscounted Boolean  @default(false)
   createdAt    DateTime @default(now())
 
+  /// Linked parent/guardian account (User with a PARENT `UserSchool`
+  /// membership at this student's school) — nullable because most students
+  /// won't have a self-service portal account set up yet.
+  guardianId String?
+  guardian   User?   @relation(fields: [guardianId], references: [id])
+
   feeDues     FeeDue[]
   feeReceipts FeeReceipt[]
   attendances Attendance[]
 
   @@index([schoolId, classId])
   @@index([admissionNo])
+  @@index([guardianId])
 }
 
 enum PaymentMode {
@@ -218,6 +230,8 @@ model School {
   attendances   Attendance[]
   auditLogs     AuditLog[]
   feeCategories FeeCategoryRule[]
+  circulars     Circular[]
+  homework      Homework[]
 }
 
 enum FeeFrequency {
@@ -237,4 +251,43 @@ model FeeCategoryRule {
   createdAt         DateTime     @default(now())
 
   @@index([schoolId])
+}
+
+/// School-wide notice, e.g. a holiday announcement or PTA meeting notice.
+/// Visible to every parent at the school, so it's scoped by schoolId only
+/// (no class/student targeting) — matching the broadcast nature of a circular.
+model Circular {
+  id          String   @id @default(uuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  publishedAt DateTime @default(now())
+  createdBy   String
+  creator     User     @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([schoolId, publishedAt])
+}
+
+/// Assigned to a whole class (Class already fans out to every enrolled
+/// Student), so parents see homework for their child via the child's
+/// classId rather than a direct per-student assignment.
+model Homework {
+  id          String   @id @default(uuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id])
+  title       String
+  description String
+  dueDate     DateTime
+  createdBy   String
+  creator     User     @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([classId])
+  @@index([schoolId, dueDate])
 }
