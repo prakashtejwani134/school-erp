@@ -11,6 +11,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/currency";
 import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
 import type { FinancialHubData } from "./financial-hub-data";
@@ -30,10 +32,17 @@ export function FinancialHubSheet({
   data: FinancialHubData;
 }) {
   const { totalFeeDue, categoryBreakdown, receipts } = data;
+  const isMobile = useIsMobile();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={cn(
+          "w-full sm:max-w-md",
+          isMobile && "max-h-[85vh] rounded-t-xl",
+        )}
+      >
         <SheetHeader>
           <SheetTitle>Financial Hub — {studentName}</SheetTitle>
           <SheetDescription>
@@ -68,7 +77,13 @@ export function FinancialHubSheet({
           {/* TODO: wire up real PDF generation once a utility/library is
               chosen — no PDF pipeline exists in this codebase yet (only a
               static, unrelated operational-guide.pdf asset). */}
-          <Button size="sm" variant="outline" disabled title="Coming soon">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled
+            title="Coming soon"
+            className="h-11 md:h-7"
+          >
             <Download />
             Download Fee Challan (PDF)
           </Button>
@@ -99,6 +114,7 @@ export function FinancialHubSheet({
                       <Button
                         size="icon-sm"
                         variant="ghost"
+                        className="max-md:size-11"
                         nativeButton={false}
                         render={
                           <Link

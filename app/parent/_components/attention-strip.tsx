@@ -57,7 +57,11 @@ export function AttentionStrip({
       value: formatINR(totalFeeDue),
       detail: `${feeDues.length} due${feeDues.length === 1 ? "" : "s"} outstanding`,
       cta: (
-        <Button size="sm" onClick={() => setPaySheetOpen(true)}>
+        <Button
+          size="sm"
+          className="h-11 md:h-7"
+          onClick={() => setPaySheetOpen(true)}
+        >
           Pay Now
         </Button>
       ),
@@ -79,6 +83,7 @@ export function AttentionStrip({
         <Button
           size="sm"
           variant="outline"
+          className="h-11 md:h-7"
           nativeButton={false}
           render={<Link href="/parent/attendance" />}
         >
@@ -100,6 +105,7 @@ export function AttentionStrip({
         <Button
           size="sm"
           variant="outline"
+          className="h-11 md:h-7"
           nativeButton={false}
           render={<Link href="/parent/circulars" />}
         >

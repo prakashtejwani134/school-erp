@@ -22,11 +22,11 @@ export function QuickActionChips({
 
   return (
     <>
-      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Button
           size="sm"
           variant="outline"
-          className="shrink-0 rounded-full"
+          className="h-11 shrink-0 snap-start rounded-full md:h-7"
           nativeButton={false}
           render={<Link href="/parent/leave" />}
         >
@@ -37,7 +37,7 @@ export function QuickActionChips({
         <Button
           size="sm"
           variant="outline"
-          className="shrink-0 rounded-full"
+          className="h-11 shrink-0 snap-start rounded-full md:h-7"
           onClick={() => setPayFeesOpen(true)}
         >
           <CircleDollarSign className="size-3.5" />
@@ -47,7 +47,7 @@ export function QuickActionChips({
         <Button
           size="sm"
           variant="outline"
-          className="shrink-0 rounded-full"
+          className="h-11 shrink-0 snap-start rounded-full md:h-7"
           nativeButton={false}
           render={<Link href="/parent/homework" />}
         >
@@ -58,7 +58,7 @@ export function QuickActionChips({
         <Button
           size="sm"
           variant="outline"
-          className="shrink-0 rounded-full"
+          className="h-11 shrink-0 snap-start rounded-full md:h-7"
           nativeButton={false}
           render={<Link href="/parent/circulars" />}
         >

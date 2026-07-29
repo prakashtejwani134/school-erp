@@ -58,7 +58,7 @@ export function SmartCategoryGrid() {
     <Accordion defaultValue={["academics"]} className="rounded-lg border px-4">
       {CATEGORIES.map((category) => (
         <AccordionItem key={category.value} value={category.value}>
-          <AccordionTrigger>
+          <AccordionTrigger className="max-md:py-3.5">
             <span className="flex items-center gap-2">
               {category.icon}
               {category.label}
@@ -70,7 +70,7 @@ export function SmartCategoryGrid() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground hover:bg-muted"
+                  className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-foreground hover:bg-muted max-md:py-3"
                 >
                   {link.icon}
                   {link.label}

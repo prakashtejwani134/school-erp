@@ -7,6 +7,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/currency";
 import type { FeeDueRow } from "../data";
 
@@ -27,9 +29,17 @@ export function PayFeeSheet({
   feeDues: FeeDueRow[];
   totalFeeDue: number;
 }) {
+  const isMobile = useIsMobile();
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={cn(
+          "w-full sm:max-w-md",
+          isMobile && "max-h-[85vh] rounded-t-xl",
+        )}
+      >
         <SheetHeader>
           <SheetTitle>Pending Fee — {studentName}</SheetTitle>
           <SheetDescription>

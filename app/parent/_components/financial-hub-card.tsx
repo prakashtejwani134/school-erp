@@ -39,7 +39,12 @@ export function FinancialHubCard({
           </CardTitle>
         </CardHeader>
         <CardFooter>
-          <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-11 md:h-7"
+            onClick={() => setOpen(true)}
+          >
             View Fee Details
           </Button>
         </CardFooter>
