@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ERP Blueprint — Risk-Free Switch</title>
+<style>
+  :root{
+    --bg: #0b1120;
+    --bg-alt: #10192e;
+    --panel: rgba(255,255,255,0.04);
+    --panel-border: rgba(255,255,255,0.09);
+    --ink: #eef2f9;
+    --ink-dim: #a8b3c7;
+    --accent: #34d399;
+    --accent-2: #60a5fa;
+    --accent-3: #f59e0b;
+    --accent-4: #f87171;
+    --accent-5: #a78bfa;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(52,211,153,0.10), transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, rgba(96,165,250,0.10), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    overflow:hidden;
+  }
+  #deck{ position:relative; width:100vw; height:100vh; }
+  .slide{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 6vh 8vw;
+    opacity:0; visibility:hidden;
+    transform: translateY(18px) scale(0.99);
+    transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s;
+    pointer-events:none;
+  }
+  .slide.active{
+    opacity:1; visibility:visible; transform:translateY(0) scale(1);
+    transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1), visibility 0s;
+    pointer-events:auto;
+  }
+  .slide .kicker{
+    font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin-bottom:14px;
+  }
+  .slide h1{
+    font-size: clamp(2rem, 4.6vw, 3.6rem);
+    line-height:1.08; margin:0 0 .5rem 0; font-weight:750; letter-spacing:-.02em;
+  }
+  .slide h2{
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    margin: 0 0 1.2rem 0; font-weight:700; letter-spacing:-.01em;
+  }
+  .slide .sub{
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    color:var(--ink-dim); max-width:60ch; margin-bottom: 2rem;
+    line-height:1.55;
+  }
+  .accent-green{color:var(--accent);}
+  .accent-blue{color:var(--accent-2);}
+  .accent-amber{color:var(--accent-3);}
+  .accent-red{color:var(--accent-4);}
+  .accent-violet{color:var(--accent-5);}
+
+  .grid{ display:grid; gap:18px; }
+  .grid-2{ grid-template-columns: 1fr 1fr; }
+  .grid-3{ grid-template-columns: repeat(3, 1fr); }
+  .grid-4{ grid-template-columns: repeat(4, 1fr); }
+  .grid-5{ grid-template-columns: repeat(5, 1fr); }
+
+  .card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:16px;
+    padding:22px 24px; backdrop-filter: blur(6px);
+  }
+  .card h3{ margin:0 0 8px 0; font-size:1.05rem; font-weight:700; }
+  .card p{ margin:0; color:var(--ink-dim); font-size:.92rem; line-height:1.5; }
+  .card .tag{
+    display:inline-block; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
+    padding:3px 8px; border-radius:999px; margin-bottom:10px; font-weight:700;
+  }
+  .tag-green{ background:rgba(52,211,153,.15); color:var(--accent); }
+  .tag-blue{ background:rgba(96,165,250,.15); color:var(--accent-2); }
+  .tag-amber{ background:rgba(245,158,11,.15); color:var(--accent-3); }
+  .tag-red{ background:rgba(248,113,113,.15); color:var(--accent-4); }
+  .tag-violet{ background:rgba(167,139,250,.15); color:var(--accent-5); }
+
+  .stat{ text-align:left; }
+  .stat .num{
+    font-size: clamp(2.2rem, 5vw, 4.2rem); font-weight:800; letter-spacing:-.03em;
+    line-height:1; margin-bottom:6px;
+  }
+  .stat .label{ color:var(--ink-dim); font-size:.95rem; }
+
+  code, .code{
+    font-family:var(--mono); font-size:.82em;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+    padding:1px 7px; border-radius:6px; color:var(--accent-2);
+  }
+  .footnote{
+    margin-top:auto; padding-top:18px; color:#6b7690; font-size:.78rem;
+    border-top:1px solid rgba(255,255,255,.06);
+  }
+  .badge-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.4rem; }
+  .pill{
+    font-size:.78rem; padding:5px 12px; border-radius:999px; border:1px solid var(--panel-border);
+    color:var(--ink-dim); background:var(--panel);
+  }
+
+  .before-after{ display:grid; grid-template-columns: 1fr auto 1fr; gap:0; align-items:stretch; }
+  .ba-col{ padding:20px 22px; border-radius:16px; }
+  .ba-before{ background:rgba(248,113,113,0.06); border:1px solid rgba(248,113,113,0.22); }
+  .ba-after{ background:rgba(52,211,153,0.06); border:1px solid rgba(52,211,153,0.22); }
+  .ba-arrow{ display:flex; align-items:center; justify-content:center; padding:0 22px; font-size:1.6rem; color:var(--ink-dim); }
+  .ba-col h4{ margin:0 0 10px 0; font-size:.85rem; text-transform:uppercase; letter-spacing:.08em; }
+  .ba-before h4{ color:var(--accent-4); }
+  .ba-after h4{ color:var(--accent); }
+  .ba-col ol{ margin:0; padding-left:1.2em; color:var(--ink-dim); font-size:.92rem; line-height:1.7; }
+  .ba-col ol li span.t{ color:var(--ink); font-weight:600; }
+
+  table.matrix{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  table.matrix th, table.matrix td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--panel-border); }
+  table.matrix th{ color:var(--ink-dim); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
+  table.matrix td.check{ color:var(--accent); font-weight:700; }
+  table.matrix td.dash{ color:#5a6478; }
+
+  /* Chrome for the deck */
+  #progress{
+    position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index:50; transition: width .4s cubic-bezier(.22,1,.36,1);
+  }
+  #controls{
+    position:fixed; bottom:22px; right:28px; display:flex; gap:10px; align-items:center; z-index:50;
+  }
+  #controls button{
+    background:var(--panel); border:1px solid var(--panel-border); color:var(--ink);
+    width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1rem;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .2s, transform .15s;
+  }
+  #controls button:hover{ background:rgba(255,255,255,.1); transform:translateY(-1px); }
+  #counter{
+    position:fixed; bottom:28px; left:28px; color:var(--ink-dim); font-size:.82rem;
+    font-variant-numeric: tabular-nums; z-index:50; letter-spacing:.02em;
+  }
+  #hint{
+    position:fixed; top:22px; right:28px; color:#5a6478; font-size:.74rem; z-index:50;
+  }
+  .logo-mark{
+    position:fixed; top:24px; left:28px; z-index:50; font-size:.82rem; color:var(--ink-dim);
+    display:flex; align-items:center; gap:8px; font-weight:600;
+    text-decoration:none;
+  }
+  .logo-dot{ width:9px; height:9px; border-radius:3px; background:var(--accent); display:inline-block; }
+
+  ul.plain{ margin:0; padding-left:1.2em; color:var(--ink-dim); font-size:.98rem; line-height:1.75; }
+  ul.plain li span.t{ color:var(--ink); font-weight:650; }
+  ul.plain li{ margin-bottom:4px; }
+
+  .center{ text-align:center; align-items:center; }
+  .center .sub{ margin-left:auto; margin-right:auto; }
+
+  @media (max-width: 900px){
+    .grid-2, .grid-3, .grid-4, .grid-5{ grid-template-columns: 1fr; }
+    .before-after{ grid-template-columns: 1fr; }
+    .ba-arrow{ padding:10px 0; }
+    #hint{ display:none; }
+  }
+
+  @media print {
+    #progress, #controls, #counter, #hint, .logo-mark{ display:none; }
+    .slide{ position:relative; opacity:1; visibility:visible; transform:none; height:100vh; page-break-after:always; }
+  }
+
+  /* --- Additive for this section only: icon badges + step timeline --- */
+  .icon-badge{
+    width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+    margin-bottom:14px;
+  }
+  .icon-badge svg{ width:21px; height:21px; }
+  .icon-green{ background:rgba(52,211,153,.15); color:var(--accent); }
+  .icon-blue{ background:rgba(96,165,250,.15); color:var(--accent-2); }
+  .icon-violet{ background:rgba(167,139,250,.15); color:var(--accent-5); }
+  .icon-amber{ background:rgba(245,158,11,.15); color:var(--accent-3); }
+
+  .timeline{ display:grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items:stretch; gap:0; }
+  .timeline .card{ display:flex; flex-direction:column; }
+  .timeline-arrow{ display:flex; align-items:center; justify-content:center; padding:0 18px; font-size:1.4rem; color:var(--ink-dim); }
+  @media (max-width: 900px){
+    .timeline{ grid-template-columns: 1fr; }
+    .timeline-arrow{ padding:8px 0; transform:rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress" style="width:0%"></div>
+<a class="logo-mark" href="leadership-presentation.html"><span class="logo-dot"></span> ERP Blueprint — Risk-Free Switch</a>
+<div id="hint">Use ← → or Space · F for fullscreen</div>
+
+<div id="deck">
+
+  <!-- 1. Opener + reassurance cards -->
+  <section class="slide">
+    <div class="kicker">For Directors Weighing A Switch</div>
+    <h1>We know switching feels risky.</h1>
+    <p class="sub">Years of student, fee, and attendance records live in your current system — the fear of losing that data or disrupting collections mid-term is real. Here's exactly how we remove that risk, step by step.</p>
+    <div class="grid grid-4">
+      <div class="card">
+        <div class="icon-badge icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg>
+        </div>
+        <span class="tag tag-green">Zero re-typing</span>
+        <h3>Data Migration</h3>
+        <p>We import your existing student, fee, and attendance records — you don't type anything.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </div>
+        <span class="tag tag-blue">Zero commitment</span>
+        <h3>Parallel Run</h3>
+        <p>Try one class or just fee collection alongside your current system for a month, zero commitment.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge icon-violet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
+        </div>
+        <span class="tag tag-violet">Always available</span>
+        <h3>Training &amp; Support</h3>
+        <p>One session gets your staff comfortable, ongoing support over WhatsApp.</p>
+      </div>
+      <div class="card">
+        <div class="icon-badge icon-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <span class="tag tag-amber">No lock-in</span>
+        <h3>Your Data, Your Control</h3>
+        <p>Export your data anytime, no lock-in.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. How the switch works -->
+  <section class="slide">
+    <div class="kicker accent-blue">The Switch, Step By Step</div>
+    <h2>How the switch works</h2>
+    <p class="sub">No big-bang cutover. You stay in control of the pace, and can stop at any point before Week 5 with nothing lost.</p>
+    <div class="timeline">
+      <div class="card">
+        <span class="tag tag-green">Week 1</span>
+        <h3>Data import &amp; setup</h3>
+        <p>Your student, fee, and attendance records are imported and checked against your current system before anyone touches the new one.</p>
+      </div>
+      <div class="timeline-arrow">→</div>
+      <div class="card">
+        <span class="tag tag-blue">Weeks 2–4</span>
+        <h3>Parallel run, one module</h3>
+        <p>Fee collection — or a single class — runs side-by-side with your existing ERP. Nothing is switched off, nothing is at risk.</p>
+      </div>
+      <div class="timeline-arrow">→</div>
+      <div class="card">
+        <span class="tag tag-violet">Week 5</span>
+        <h3>Full cutover, when ready</h3>
+        <p>Only once your team is comfortable and the numbers match do you make the switch — on your timeline, not ours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Closing / pricing -->
+  <section class="slide center">
+    <div class="kicker">Pricing</div>
+    <h1>Transparent pricing. <span class="accent-green">No hidden fees.</span></h1>
+    <p class="sub">One flat per-school fee — no migration charges, no per-feature upsells, no surprise line items on your invoice. What we quote is what you pay.</p>
+    <div class="badge-row" style="justify-content:center">
+      <span class="pill">No migration charges</span>
+      <span class="pill">No lock-in contracts</span>
+      <span class="pill">Cancel during the parallel run, no cost</span>
+    </div>
+  </section>
+
+</div>
+
+<div id="counter">1 / 3</div>
+<div id="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <button id="next" aria-label="Next slide">›</button>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var idx = 0;
+
+  var progressEls = document.querySelectorAll('#progress');
+  var counterEl = document.getElementById('counter');
+
+  function render(){
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === idx); });
+    var pct = total > 1 ? (idx / (total - 1)) * 100 : 0;
+    progressEls.forEach(function(p){ p.style.width = pct + '%'; });
+    counterEl.textContent = (idx + 1) + ' / ' + total;
+  }
+
+  function go(delta){
+    idx = Math.max(0, Math.min(total - 1, idx + delta));
+    render();
+  }
+
+  document.getElementById('prev').addEventListener('click', function(){ go(-1); });
+  document.getElementById('next').addEventListener('click', function(){ go(1); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (e.key === 'Home') { idx = 0; render(); }
+    else if (e.key === 'End') { idx = total - 1; render(); }
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+  });
+
+  // Touch swipe
+  var touchStartX = null;
+  document.addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if (touchStartX === null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+    touchStartX = null;
+  }, {passive:true});
+
+  // Click right/left half of screen to navigate (ignore clicks on buttons/logo link)
+  document.getElementById('deck').addEventListener('click', function(e){
+    if (e.target.closest('#controls')) return;
+    var x = e.clientX, w = window.innerWidth;
+    go(x > w / 2 ? 1 : -1);
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
