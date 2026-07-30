@@ -114,6 +114,7 @@ export function FeeCategoryDialog({
                   onValueChange={(value) =>
                     value && setFrequency(value as FeeFrequency)
                   }
+                  items={FREQUENCY_OPTIONS}
                 >
                   <SelectTrigger id="frequency">
                     <SelectValue />

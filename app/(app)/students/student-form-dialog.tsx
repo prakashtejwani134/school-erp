@@ -138,6 +138,7 @@ export function StudentFormDialog({
                 key={student?.id ?? "new"}
                 name="classId"
                 defaultValue={student?.classId}
+                items={classes.map((c) => ({ value: c.id, label: `${c.name}-${c.section}` }))}
                 required
               >
                 <SelectTrigger id="classId" className="w-full">
