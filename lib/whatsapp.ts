@@ -59,3 +59,62 @@ export async function sendWhatsAppReceipt(receiptId: string): Promise<void> {
     );
   }
 }
+
+/**
+ * Mock WhatsApp delivery for a fee-due reminder. Same shape/approach as
+ * `sendWhatsAppReceipt` above — logs the payload instead of sending it, so
+ * the same swap-in-a-`fetch` note applies here too. Returns `false` (instead
+ * of throwing) when the student has no usable phone number, so a bulk
+ * caller can count skips without a try/catch per student.
+ */
+export async function sendWhatsAppFeeReminder(
+  studentId: string,
+): Promise<boolean> {
+  const student = await prisma.student.findUnique({ where: { id: studentId } });
+  if (!student) return false;
+
+  const phone = student.parentPhone.replace(/\D/g, "");
+  if (!phone) return false;
+
+  const dues = await prisma.feeDue.findMany({
+    where: { studentId, isPaid: false },
+    include: { feeStructure: true },
+    orderBy: { feeStructure: { dueDate: "asc" } },
+  });
+  if (dues.length === 0) return false;
+
+  const totalDue = dues.reduce(
+    (sum, due) => sum + (due.dueAmount - due.amountPaid),
+    0,
+  );
+  const nextDueDate = dues[0].feeStructure.dueDate;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "template",
+    template: {
+      name: "fee_payment_reminder",
+      language: { code: "en" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: `${student.firstName} ${student.lastName}` },
+            { type: "text", text: formatINR(totalDue) },
+            { type: "text", text: formatDisplayDate(nextDueDate) },
+          ],
+        },
+      ],
+    },
+  };
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      "[WhatsApp mock] sendWhatsAppFeeReminder — would POST to Meta WhatsApp Business Cloud API:",
+      JSON.stringify(payload, null, 2),
+    );
+  }
+
+  return true;
+}
