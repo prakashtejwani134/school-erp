@@ -19,14 +19,16 @@ import { DataTable } from "./data-table";
 import { DeleteStudentDialog } from "./delete-student-dialog";
 import { StudentFormDialog } from "./student-form-dialog";
 import { StudentRowDetail } from "./student-row-detail";
-import type { ClassOption, StudentRow } from "./types";
+import type { ClassOption, SchoolBranding, StudentRow } from "./types";
 
 export function StudentsClient({
   students,
   classes,
+  branding,
 }: {
   students: StudentRow[];
   classes: ClassOption[];
+  branding: SchoolBranding;
 }) {
   const [search, setSearch] = React.useState("");
   const [classFilter, setClassFilter] = React.useState("all");
@@ -128,7 +130,9 @@ export function StudentsClient({
         columns={columns}
         data={filtered}
         getRowId={(student) => student.id}
-        renderRowDetail={(student) => <StudentRowDetail student={student} />}
+        renderRowDetail={(student) => (
+          <StudentRowDetail student={student} branding={branding} />
+        )}
         emptyMessage="No students found."
       />
 

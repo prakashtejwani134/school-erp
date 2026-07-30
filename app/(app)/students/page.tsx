@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDisplayDate } from "@/lib/date";
 import { requireRouteAccess } from "@/lib/route-access";
 import { StudentsClient } from "./students-client";
-import type { ClassOption, FeeStatus, StudentRow } from "./types";
+import type { ClassOption, FeeStatus, SchoolBranding, StudentRow } from "./types";
 
 async function getStudents(schoolId: string): Promise<StudentRow[]> {
   const students = await prisma.student.findMany({
@@ -49,13 +49,25 @@ async function getClasses(schoolId: string): Promise<ClassOption[]> {
   return classes.map((c) => ({ id: c.id, name: c.name, section: c.section }));
 }
 
+async function getSchoolBranding(schoolId: string): Promise<SchoolBranding> {
+  const school = await prisma.school.findUniqueOrThrow({ where: { id: schoolId } });
+  return {
+    schoolName: school.schoolName,
+    logoUrl: school.logoUrl,
+    currentAcademicYear: school.currentAcademicYear,
+  };
+}
+
 export default async function StudentsPage() {
   const { schoolId } = await requireRouteAccess("students");
 
-  const [students, classes] = await Promise.all([
+  const [students, classes, branding] = await Promise.all([
     getStudents(schoolId),
     getClasses(schoolId),
+    getSchoolBranding(schoolId),
   ]);
 
-  return <StudentsClient students={students} classes={classes} />;
+  return (
+    <StudentsClient students={students} classes={classes} branding={branding} />
+  );
 }

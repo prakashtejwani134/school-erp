@@ -21,3 +21,9 @@ export type ClassOption = {
   name: string;
   section: string;
 };
+
+export type SchoolBranding = {
+  schoolName: string;
+  logoUrl: string | null;
+  currentAcademicYear: string;
+};
