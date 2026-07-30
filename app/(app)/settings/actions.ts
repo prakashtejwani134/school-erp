@@ -171,3 +171,51 @@ export async function deleteFeeCategoryRule(id: string) {
 
   revalidatePath("/settings");
 }
+
+function parseSubjectForm(formData: FormData): { name: string } {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) throw new Error("Subject name is required.");
+  return { name };
+}
+
+export async function createSubject(formData: FormData) {
+  const { schoolId } = await requireActiveSchoolContext();
+  const { name } = parseSubjectForm(formData);
+
+  try {
+    await prisma.subject.create({ data: { name, schoolId } });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new Error("A subject with this name already exists.");
+    }
+    throw new Error("Failed to create subject.");
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/exams");
+}
+
+export async function deleteSubject(id: string) {
+  const { schoolId } = await requireActiveSchoolContext();
+
+  const subject = await prisma.subject.findFirst({ where: { id, schoolId } });
+  if (!subject) throw new Error("This subject no longer exists.");
+
+  try {
+    await prisma.subject.delete({ where: { id: subject.id } });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2003" || error.code === "P2025")
+    ) {
+      throw new Error("This subject has marks recorded and can't be removed.");
+    }
+    throw new Error("Failed to delete subject.");
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/exams");
+}

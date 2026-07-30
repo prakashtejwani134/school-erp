@@ -60,6 +60,7 @@ model Class {
 
   students Student[]
   homework Homework[]
+  exams    Exam[]
 
   @@index([schoolId])
 }
@@ -98,6 +99,7 @@ model Student {
   feeDues     FeeDue[]
   feeReceipts FeeReceipt[]
   attendances Attendance[]
+  marks       Mark[]
 
   @@index([schoolId, classId])
   @@index([admissionNo])
@@ -197,6 +199,8 @@ enum AuditActionType {
   FEE_CATEGORY_CREATED
   FEE_CATEGORY_UPDATED
   FEE_CATEGORY_DELETED
+  EXAM_CREATED
+  MARKS_ENTERED
 }
 
 model AuditLog {
@@ -247,6 +251,8 @@ model School {
   feeCategories FeeCategoryRule[]
   circulars     Circular[]
   homework      Homework[]
+  subjects      Subject[]
+  exams         Exam[]
 }
 
 enum FeeFrequency {
@@ -305,4 +311,58 @@ model Homework {
   @@index([schoolId])
   @@index([classId])
   @@index([schoolId, dueDate])
+}
+
+/// A gradeable subject (e.g. "Mathematics"). Deliberately just a name —
+/// no per-class or per-grade-level variation in this phase.
+model Subject {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+
+  marks Mark[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+/// A single exam sitting (e.g. "Mid-Term 2026") for one class. Marks are
+/// always entered per (exam, subject, student) — see `Mark`.
+model Exam {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  examDate  DateTime
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  createdAt DateTime @default(now())
+
+  marks Mark[]
+
+  @@index([schoolId])
+  @@index([classId])
+}
+
+/// One student's score in one subject of one exam. `maxMarks` is stored
+/// per row (not on `Exam`/`Subject`) so a subject's max can differ between
+/// sittings without a migration.
+model Mark {
+  id            String   @id @default(cuid())
+  examId        String
+  exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id])
+  marksObtained Float
+  maxMarks      Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([examId, studentId, subjectId])
+  @@index([studentId])
+  @@index([examId])
 }

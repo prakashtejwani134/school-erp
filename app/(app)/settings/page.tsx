@@ -1,14 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { requireRouteAccess } from "@/lib/route-access";
 import { SettingsClient } from "./settings-client";
-import type { FeeCategoryRuleRow, SchoolSettingsData } from "./types";
+import type { FeeCategoryRuleRow, SchoolSettingsData, SubjectRow } from "./types";
 
 export default async function SettingsPage() {
   const { schoolId } = await requireRouteAccess("settings");
 
   const school = await prisma.school.findUniqueOrThrow({
     where: { id: schoolId },
-    include: { feeCategories: { orderBy: { createdAt: "asc" } } },
+    include: {
+      feeCategories: { orderBy: { createdAt: "asc" } },
+      subjects: { orderBy: { name: "asc" } },
+    },
   });
 
   const schoolSettings: SchoolSettingsData = {
@@ -30,7 +33,16 @@ export default async function SettingsPage() {
     lateFeePercentage: rule.lateFeePercentage,
   }));
 
+  const subjects: SubjectRow[] = school.subjects.map((subject) => ({
+    id: subject.id,
+    name: subject.name,
+  }));
+
   return (
-    <SettingsClient schoolSettings={schoolSettings} feeCategories={feeCategories} />
+    <SettingsClient
+      schoolSettings={schoolSettings}
+      feeCategories={feeCategories}
+      subjects={subjects}
+    />
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BookOpen, CalendarPlus, CalendarX2, GraduationCap, LayoutGrid, Megaphone } from "lucide-react";
+import { BookOpen, CalendarPlus, CalendarX2, GraduationCap, LayoutGrid, Megaphone, Trophy } from "lucide-react";
 
 import {
   Accordion,
@@ -32,6 +32,7 @@ const CATEGORIES: Category[] = [
     icon: <GraduationCap className="size-4 text-muted-foreground" />,
     links: [
       { href: "/parent/attendance", label: "Attendance", icon: <CalendarX2 className="size-4" /> },
+      { href: "/parent/performance", label: "Performance", icon: <Trophy className="size-4" /> },
       { href: "/parent/homework", label: "Homework", icon: <BookOpen className="size-4" /> },
     ],
   },

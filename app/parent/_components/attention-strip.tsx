@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AlertTriangle, CalendarX2, Megaphone } from "lucide-react";
+import { AlertTriangle, CalendarX2, Megaphone, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +32,7 @@ export function AttentionStrip({
   attendanceRatePercent,
   consecutiveAbsences,
   unreadCircularCount,
+  hasRecentExamResult,
 }: {
   studentName: string;
   feeDues: FeeDueRow[];
@@ -39,6 +40,7 @@ export function AttentionStrip({
   attendanceRatePercent: number;
   consecutiveAbsences: number;
   unreadCircularCount: number;
+  hasRecentExamResult: boolean;
 }) {
   const [paySheetOpen, setPaySheetOpen] = React.useState(false);
 
@@ -110,6 +112,28 @@ export function AttentionStrip({
           render={<Link href="/parent/circulars" />}
         >
           Read Now
+        </Button>
+      ),
+    });
+  }
+
+  if (hasRecentExamResult) {
+    cards.push({
+      key: "performance",
+      accentClassName: "border-l-emerald-500 dark:border-l-emerald-400",
+      icon: <Trophy className="size-4 text-emerald-600 dark:text-emerald-400" />,
+      label: "New Result Published",
+      value: "New",
+      detail: "A new exam result is ready to view",
+      cta: (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-11 md:h-7"
+          nativeButton={false}
+          render={<Link href="/parent/performance" />}
+        >
+          View Result
         </Button>
       ),
     });

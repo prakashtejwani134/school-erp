@@ -19,10 +19,30 @@ export type AttentionStripData = {
   attendanceRatePercent: number;
   consecutiveAbsences: number;
   unreadCircularCount: number;
+  hasRecentExamResult: boolean;
   // Queried but not yet surfaced as its own card — a future homework card
   // can read this straight off the same payload.
   pendingHomeworkCount: number;
 };
+
+export const RESULT_RECENT_WINDOW_DAYS = 7;
+
+// "New" is approximated the same way as unread circulars above — by
+// recency, since there's no per-parent "seen" tracking on marks either.
+// Exported so the full performance page (app/parent/performance/) doesn't
+// need to re-derive the same window.
+export async function hasRecentExamResult(
+  schoolId: string,
+  studentId: string,
+): Promise<boolean> {
+  const since = new Date();
+  since.setDate(since.getDate() - RESULT_RECENT_WINDOW_DAYS);
+
+  const count = await prisma.mark.count({
+    where: { studentId, exam: { schoolId }, createdAt: { gte: since } },
+  });
+  return count > 0;
+}
 
 export async function getFeeDues(schoolId: string, studentId: string): Promise<FeeDueRow[]> {
   const dues = await prisma.feeDue.findMany({
@@ -124,12 +144,13 @@ export async function getAttentionStripData(
   schoolId: string,
   student: { id: string; classId: string },
 ): Promise<AttentionStripData> {
-  const [feeDues, attendance, unreadCircularCount, pendingHomeworkCount] =
+  const [feeDues, attendance, unreadCircularCount, pendingHomeworkCount, recentResult] =
     await Promise.all([
       getFeeDues(schoolId, student.id),
       getAttendanceSnapshot(schoolId, student.id),
       getUnreadCircularCount(schoolId),
       getPendingHomeworkCount(schoolId, student.classId),
+      hasRecentExamResult(schoolId, student.id),
     ]);
 
   const totalFeeDue = feeDues.reduce((sum, due) => sum + due.remainingAmount, 0);
@@ -140,6 +161,7 @@ export async function getAttentionStripData(
     attendanceRatePercent: attendance.attendanceRatePercent,
     consecutiveAbsences: attendance.consecutiveAbsences,
     unreadCircularCount,
+    hasRecentExamResult: recentResult,
     pendingHomeworkCount,
   };
 }

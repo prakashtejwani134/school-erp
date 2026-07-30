@@ -10,6 +10,8 @@ export const AUDIT_ACTION_LABELS: Record<AuditActionType, string> = {
   FEE_CATEGORY_CREATED: "Fee Category Added",
   FEE_CATEGORY_UPDATED: "Fee Category Updated",
   FEE_CATEGORY_DELETED: "Fee Category Removed",
+  EXAM_CREATED: "Exam Created",
+  MARKS_ENTERED: "Marks Entered",
 };
 
 export const AUDIT_ACTION_BADGE_STYLES: Record<AuditActionType, string> = {
@@ -22,4 +24,6 @@ export const AUDIT_ACTION_BADGE_STYLES: Record<AuditActionType, string> = {
   FEE_CATEGORY_CREATED: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
   FEE_CATEGORY_UPDATED: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
   FEE_CATEGORY_DELETED: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  EXAM_CREATED: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
+  MARKS_ENTERED: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
 };

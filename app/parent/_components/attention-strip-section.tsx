@@ -26,6 +26,7 @@ export async function AttentionStripSection({
       attendanceRatePercent={data.attendanceRatePercent}
       consecutiveAbsences={data.consecutiveAbsences}
       unreadCircularCount={data.unreadCircularCount}
+      hasRecentExamResult={data.hasRecentExamResult}
     />
   );
 }

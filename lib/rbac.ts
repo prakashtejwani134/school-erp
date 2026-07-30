@@ -5,6 +5,7 @@ export type NavKey =
   | "students"
   | "classes"
   | "attendance"
+  | "exams"
   | "fees"
   | "auditLogs"
   | "settings"
@@ -20,13 +21,14 @@ const ROLE_ACCESS: Record<Role, NavKey[]> = {
     "students",
     "classes",
     "attendance",
+    "exams",
     "fees",
     "auditLogs",
     "settings",
     "profile",
   ],
   ADMIN: ["dashboard", "students", "fees", "profile"],
-  TEACHER: ["dashboard", "classes", "attendance", "profile"],
+  TEACHER: ["dashboard", "classes", "attendance", "exams", "profile"],
   PARENT: ["dashboard", "profile"],
 };
 

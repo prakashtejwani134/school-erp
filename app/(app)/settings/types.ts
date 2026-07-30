@@ -18,3 +18,8 @@ export type FeeCategoryRuleRow = {
   frequency: FeeFrequency;
   lateFeePercentage: number;
 };
+
+export type SubjectRow = {
+  id: string;
+  name: string;
+};
