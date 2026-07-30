@@ -15,6 +15,7 @@ type StudentInput = {
   address: string | null;
   classId: string;
   isDiscounted: boolean;
+  concessionReason: string | null;
 };
 
 function parseStudentForm(formData: FormData): StudentInput {
@@ -25,12 +26,16 @@ function parseStudentForm(formData: FormData): StudentInput {
   const address = String(formData.get("address") ?? "").trim();
   const classId = String(formData.get("classId") ?? "").trim();
   const isDiscounted = formData.get("isDiscounted") === "on";
+  const concessionReason = String(formData.get("concessionReason") ?? "").trim();
 
   if (!firstName) throw new Error("First name is required.");
   if (!lastName) throw new Error("Last name is required.");
   if (!admissionNo) throw new Error("Admission number is required.");
   if (!parentPhone) throw new Error("Parent phone is required.");
   if (!classId) throw new Error("Class is required.");
+  if (isDiscounted && !concessionReason) {
+    throw new Error("A reason is required to grant a fee concession.");
+  }
 
   return {
     firstName,
@@ -40,6 +45,7 @@ function parseStudentForm(formData: FormData): StudentInput {
     address: address || null,
     classId,
     isDiscounted,
+    concessionReason: isDiscounted ? concessionReason : null,
   };
 }
 
@@ -58,7 +64,7 @@ function friendlyDbError(error: unknown, fallback: string): Error {
 }
 
 export async function createStudent(formData: FormData) {
-  const { schoolId } = await requireActiveSchoolContext();
+  const { schoolId, userId } = await requireActiveSchoolContext();
   const data = parseStudentForm(formData);
 
   const classBelongsToSchool = await prisma.class.count({
@@ -68,7 +74,14 @@ export async function createStudent(formData: FormData) {
 
   let created;
   try {
-    created = await prisma.student.create({ data: { ...data, schoolId } });
+    created = await prisma.student.create({
+      data: {
+        ...data,
+        schoolId,
+        concessionApprovedBy: data.isDiscounted ? userId : null,
+        concessionGrantedAt: data.isDiscounted ? new Date() : null,
+      },
+    });
   } catch (error) {
     throw friendlyDbError(error, "Failed to create student.");
   }
@@ -85,7 +98,7 @@ export async function createStudent(formData: FormData) {
 }
 
 export async function updateStudent(id: string, formData: FormData) {
-  const { schoolId } = await requireActiveSchoolContext();
+  const { schoolId, userId } = await requireActiveSchoolContext();
   const data = parseStudentForm(formData);
 
   const classBelongsToSchool = await prisma.class.count({
@@ -93,11 +106,35 @@ export async function updateStudent(id: string, formData: FormData) {
   });
   if (!classBelongsToSchool) throw new Error("Invalid class.");
 
+  const existing = await prisma.student.findFirst({
+    where: { id, schoolId },
+    select: { isDiscounted: true, concessionReason: true, concessionApprovedBy: true, concessionGrantedAt: true },
+  });
+  if (!existing) throw new Error("This student no longer exists.");
+
+  // Only re-stamp the approver/grant date when the concession is newly
+  // granted or its reason changed — an unrelated edit (e.g. address) by a
+  // different staff member shouldn't silently reassign who approved it.
+  const isNewOrChangedConcession =
+    data.isDiscounted &&
+    (!existing.isDiscounted || existing.concessionReason !== data.concessionReason);
+
+  const concessionApprovedBy = !data.isDiscounted
+    ? null
+    : isNewOrChangedConcession
+      ? userId
+      : existing.concessionApprovedBy;
+  const concessionGrantedAt = !data.isDiscounted
+    ? null
+    : isNewOrChangedConcession
+      ? new Date()
+      : existing.concessionGrantedAt;
+
   let count: number;
   try {
     ({ count } = await prisma.student.updateMany({
       where: { id, schoolId },
-      data,
+      data: { ...data, concessionApprovedBy, concessionGrantedAt },
     }));
   } catch (error) {
     throw friendlyDbError(error, "Failed to update student.");

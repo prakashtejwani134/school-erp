@@ -70,7 +70,7 @@ type SchoolSpec = {
 };
 
 /** Creates one school's users, classes, fee structures, students, dues/receipts, and attendance. Returns the school id so the caller can attach a shared Director membership. */
-async function seedSchool(spec: SchoolSpec) {
+async function seedSchool(spec: SchoolSpec, concessionApproverId?: string) {
   const school = await prisma.school.create({
     data: {
       code: spec.code,
@@ -167,6 +167,7 @@ async function seedSchool(spec: SchoolSpec) {
 
     let admissionCounter = 1;
     for (const s of classSpec.students) {
+      const isDiscounted = admissionCounter === 3;
       const student = await prisma.student.create({
         data: {
           schoolId: school.id,
@@ -175,7 +176,12 @@ async function seedSchool(spec: SchoolSpec) {
           lastName: s.lastName,
           parentPhone: s.phone,
           classId: cls.id,
-          isDiscounted: admissionCounter === 3,
+          isDiscounted,
+          concessionReason: isDiscounted
+            ? "Sibling discount — second child enrolled at the school"
+            : null,
+          concessionApprovedBy: isDiscounted ? concessionApproverId : null,
+          concessionGrantedAt: isDiscounted ? daysAgo(0) : null,
         },
       });
       students.push({ id: student.id, fees: { tuition, exam } });
@@ -340,7 +346,7 @@ async function main() {
         ],
       },
     ],
-  });
+  }, director.id);
 
   // Link Kavita Sharma (Greenwood's seeded parent) to her son Aarav Sharma,
   // so the parent-portal auth flow (guardianId lookup) has a real row to
@@ -418,7 +424,7 @@ async function main() {
         ],
       },
     ],
-  });
+  }, director.id);
 
   await prisma.userSchool.createMany({
     data: [

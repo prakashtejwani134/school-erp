@@ -27,6 +27,7 @@ import { AttendanceRadar } from "./_components/attendance-radar";
 import { LiveActivityFeed } from "./_components/live-activity-feed";
 import { SmartActionHubs } from "./_components/smart-action-hubs";
 import { CommunicationHealthBadge } from "./_components/communication-health-badge";
+import { SendDigestButton } from "./_components/send-digest-button";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,10 @@ export default async function DashboardPage() {
             Everything that needs your attention today, in one place.
           </p>
         </div>
-        <CommunicationHealthBadge />
+        <div className="flex items-center gap-2">
+          <CommunicationHealthBadge />
+          <SendDigestButton />
+        </div>
       </div>
 
       <FinancialRibbon summary={financialSummary} />

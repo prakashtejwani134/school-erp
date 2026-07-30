@@ -21,12 +21,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  schools    UserSchool[]
-  auditLogs  AuditLog[]
+  schools             UserSchool[]
+  auditLogs           AuditLog[]
   /// Students this user is the parent/guardian of (see `Student.guardianId`).
-  guardianOf Student[]
-  circulars  Circular[]
-  homework   Homework[]
+  guardianOf          Student[]    @relation("StudentGuardian")
+  /// Concessions this user approved (see `Student.concessionApprovedBy`).
+  concessionsApproved Student[]    @relation("StudentConcessionApproval")
+  circulars           Circular[]
+  homework            Homework[]
 
   @@index([email])
 }
@@ -80,7 +82,18 @@ model Student {
   /// membership at this student's school) — nullable because most students
   /// won't have a self-service portal account set up yet.
   guardianId String?
-  guardian   User?   @relation(fields: [guardianId], references: [id])
+  guardian   User?   @relation("StudentGuardian", fields: [guardianId], references: [id])
+
+  /// Why the fee discount (`isDiscounted`) was granted — required whenever
+  /// `isDiscounted` is set, enforced in the Server Action rather than here
+  /// since Prisma has no conditional-required-field constraint.
+  concessionReason     String?
+  concessionApprovedBy String?
+  concessionApprover   User?     @relation("StudentConcessionApproval", fields: [concessionApprovedBy], references: [id])
+  /// When the concession was (most recently) granted — lets the Director's
+  /// daily digest report "concessions given today" instead of every
+  /// discounted student ever.
+  concessionGrantedAt  DateTime?
 
   feeDues     FeeDue[]
   feeReceipts FeeReceipt[]
@@ -89,6 +102,8 @@ model Student {
   @@index([schoolId, classId])
   @@index([admissionNo])
   @@index([guardianId])
+  @@index([concessionApprovedBy])
+  @@index([concessionGrantedAt])
 }
 
 enum PaymentMode {

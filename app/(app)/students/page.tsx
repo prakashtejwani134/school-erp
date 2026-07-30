@@ -34,6 +34,7 @@ async function getStudents(schoolId: string): Promise<StudentRow[]> {
       classId: student.classId,
       className: `${student.class.name}-${student.class.section}`,
       isDiscounted: student.isDiscounted,
+      concessionReason: student.concessionReason,
       feeStatus,
       pendingDueCount,
     };

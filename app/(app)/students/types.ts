@@ -11,6 +11,7 @@ export type StudentRow = {
   classId: string;
   className: string;
   isDiscounted: boolean;
+  concessionReason: string | null;
   feeStatus: FeeStatus;
   pendingDueCount: number;
 };

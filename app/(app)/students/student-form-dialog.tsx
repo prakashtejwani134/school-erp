@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,9 @@ export function StudentFormDialog({
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
+  const [isDiscounted, setIsDiscounted] = React.useState(
+    student?.isDiscounted ?? false,
+  );
   const isEditing = Boolean(student);
 
   function handleSubmit(formData: FormData) {
@@ -154,11 +158,26 @@ export function StudentFormDialog({
                 id="isDiscounted"
                 name="isDiscounted"
                 defaultChecked={student?.isDiscounted}
+                onCheckedChange={(checked) => setIsDiscounted(checked)}
               />
               <Label htmlFor="isDiscounted" className="font-normal">
                 Fee discount applies
               </Label>
             </div>
+
+            {isDiscounted ? (
+              <div className="grid gap-2">
+                <Label htmlFor="concessionReason">Concession reason</Label>
+                <Textarea
+                  id="concessionReason"
+                  name="concessionReason"
+                  defaultValue={student?.concessionReason ?? ""}
+                  placeholder="Why is this fee concession being granted?"
+                  required
+                  rows={2}
+                />
+              </div>
+            ) : null}
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>

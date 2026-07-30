@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Phone } from "lucide-react";
+import { BadgePercent, CalendarDays, MapPin, Phone } from "lucide-react";
 
 import { FeeStatusBadge } from "./columns";
 import type { StudentRow } from "./types";
@@ -46,6 +46,13 @@ export function StudentRowDetail({ student }: { student: StudentRow }) {
           />
         </div>
       </div>
+      {student.isDiscounted ? (
+        <DetailField
+          icon={BadgePercent}
+          label="Concession Reason"
+          value={student.concessionReason ?? "Not on file"}
+        />
+      ) : null}
     </div>
   );
 }

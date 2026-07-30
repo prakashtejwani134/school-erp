@@ -1,7 +1,7 @@
 "use server";
 
 import { getDefaulterRiskProfiles } from "@/lib/analytics/defaulters";
-import { sendWhatsAppFeeReminder } from "@/lib/whatsapp";
+import { sendWhatsAppDirectorDigest, sendWhatsAppFeeReminder } from "@/lib/whatsapp";
 import { requireActiveSchoolContext } from "@/lib/school-context";
 
 export type SendBulkFeeRemindersResult = {
@@ -31,4 +31,21 @@ export async function sendBulkFeeReminders(): Promise<SendBulkFeeRemindersResult
   }
 
   return { targetedCount: highRiskStudentIds.length, sentCount };
+}
+
+/**
+ * Sends a mocked WhatsApp digest (today's collections, concessions, and
+ * attendance rate) to the school's Director. Throws a friendly error
+ * instead of a stack trace when no Director with a phone number on file
+ * exists for this school.
+ */
+export async function sendDirectorDailyDigest(): Promise<void> {
+  const { schoolId } = await requireActiveSchoolContext();
+
+  const sent = await sendWhatsAppDirectorDigest(schoolId);
+  if (!sent) {
+    throw new Error(
+      "No Director with a phone number on file for this school — can't send the digest.",
+    );
+  }
 }

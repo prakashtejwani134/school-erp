@@ -1,8 +1,9 @@
 import "server-only";
+import type { PaymentMode } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { formatINR } from "@/lib/currency";
-import { formatDisplayDate } from "@/lib/date";
+import { formatDisplayDate, parseDateParam, todayParam } from "@/lib/date";
 import { PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
 
 /**
@@ -112,6 +113,121 @@ export async function sendWhatsAppFeeReminder(
   if (process.env.NODE_ENV !== "production") {
     console.log(
       "[WhatsApp mock] sendWhatsAppFeeReminder — would POST to Meta WhatsApp Business Cloud API:",
+      JSON.stringify(payload, null, 2),
+    );
+  }
+
+  return true;
+}
+
+/**
+ * Mock WhatsApp delivery of the Director's daily digest — today's fee
+ * collection (with payment-mode split), any concessions granted today, and
+ * today's school-wide attendance rate. Same shape/approach as
+ * `sendWhatsAppReceipt`/`sendWhatsAppFeeReminder` above: builds the payload
+ * and logs it instead of sending it. Returns `false` (instead of throwing)
+ * when the school has no Director with a phone number on file, so the
+ * caller can show a friendly message instead of a stack trace.
+ */
+export async function sendWhatsAppDirectorDigest(
+  schoolId: string,
+): Promise<boolean> {
+  const directorMembership = await prisma.userSchool.findFirst({
+    where: { schoolId, role: "DIRECTOR" },
+    include: { user: true },
+  });
+  const phone = directorMembership?.user.phone?.replace(/\D/g, "");
+  if (!phone) return false;
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const startOfNextDay = new Date(startOfDay);
+  startOfNextDay.setDate(startOfNextDay.getDate() + 1);
+  const today = parseDateParam(todayParam());
+
+  const [todayReceipts, concessionsToday, todayAttendance] = await Promise.all([
+    prisma.feeReceipt.findMany({
+      where: { schoolId, createdAt: { gte: startOfDay, lt: startOfNextDay } },
+      select: { paidAmount: true, paymentMode: true },
+    }),
+    prisma.student.findMany({
+      where: {
+        schoolId,
+        isDiscounted: true,
+        concessionGrantedAt: { gte: startOfDay, lt: startOfNextDay },
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        concessionReason: true,
+        concessionApprover: { select: { name: true } },
+      },
+    }),
+    prisma.attendance.findMany({
+      where: { schoolId, date: today },
+      select: { status: true },
+    }),
+  ]);
+
+  const totalCollected = todayReceipts.reduce((sum, r) => sum + r.paidAmount, 0);
+
+  const byModeMap = new Map<PaymentMode, { amount: number; count: number }>();
+  for (const receipt of todayReceipts) {
+    const entry = byModeMap.get(receipt.paymentMode) ?? { amount: 0, count: 0 };
+    entry.amount += receipt.paidAmount;
+    entry.count += 1;
+    byModeMap.set(receipt.paymentMode, entry);
+  }
+  const modeBreakdownText =
+    [...byModeMap.entries()]
+      .map(
+        ([mode, { amount, count }]) =>
+          `${PAYMENT_MODE_LABELS[mode]}: ${formatINR(amount)} (${count})`,
+      )
+      .join(", ") || "No collections yet today";
+
+  const concessionsText =
+    concessionsToday
+      .map(
+        (s) =>
+          `${s.firstName} ${s.lastName} — ${s.concessionReason ?? "no reason on file"} (approved by ${s.concessionApprover?.name ?? "unknown"})`,
+      )
+      .join("; ") || "None today";
+
+  const presentCount = todayAttendance.filter((a) => a.status === "PRESENT").length;
+  const attendanceRate =
+    todayAttendance.length > 0
+      ? Math.round((presentCount / todayAttendance.length) * 100)
+      : null;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "template",
+    template: {
+      name: "director_daily_digest",
+      language: { code: "en" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: formatDisplayDate(new Date()) },
+            { type: "text", text: formatINR(totalCollected) },
+            { type: "text", text: modeBreakdownText },
+            { type: "text", text: concessionsText },
+            {
+              type: "text",
+              text: attendanceRate === null ? "No attendance marked yet" : `${attendanceRate}%`,
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      "[WhatsApp mock] sendWhatsAppDirectorDigest — would POST to Meta WhatsApp Business Cloud API:",
       JSON.stringify(payload, null, 2),
     );
   }
