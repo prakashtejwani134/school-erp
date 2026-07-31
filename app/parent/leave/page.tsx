@@ -25,6 +25,7 @@ export default async function ParentLeavePage() {
         <Button
           size="sm"
           variant="ghost"
+          className="h-11 md:h-7"
           nativeButton={false}
           render={<Link href="/parent" />}
         >

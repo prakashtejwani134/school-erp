@@ -26,6 +26,7 @@ export default async function ParentHomeworkPage() {
         <Button
           size="sm"
           variant="ghost"
+          className="h-11 md:h-7"
           nativeButton={false}
           render={<Link href="/parent" />}
         >

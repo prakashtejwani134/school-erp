@@ -54,13 +54,15 @@ export function FinancialRibbon({ summary }: { summary: FinancialRibbonSummary }
 
       <GlassCard>
         <CardHeader>
-          <CardTitle className="flex items-center gap-1.5">
-            <IndianRupee className="size-4 text-muted-foreground" />
-            Payment Mode Breakdown
-          </CardTitle>
-          <CardAction>
-            <SendReminderButton highRiskDefaulterCount={summary.highRiskDefaulterCount} />
-          </CardAction>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex items-center gap-1.5">
+              <IndianRupee className="size-4 text-muted-foreground" />
+              Payment Mode Breakdown
+            </CardTitle>
+            <CardAction>
+              <SendReminderButton highRiskDefaulterCount={summary.highRiskDefaulterCount} />
+            </CardAction>
+          </div>
         </CardHeader>
         <CardContent>
           {summary.byMode.length > 0 ? (

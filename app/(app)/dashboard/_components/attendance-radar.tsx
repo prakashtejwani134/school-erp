@@ -22,28 +22,32 @@ export function AttendanceRadar({ radar }: { radar: AttendanceRadarData }) {
     <>
       <GlassCard>
         <CardHeader>
-          <CardTitle className="flex items-center gap-1.5">
-            <CalendarX2 className="size-4 text-muted-foreground" />
-            Attendance &amp; Defaulters Radar
-          </CardTitle>
-          <CardDescription>Class-wise marking status for today</CardDescription>
-          <CardAction>
-            {radar.totalUnmarked > 0 ? (
-              <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className="flex h-6 items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-500/25 dark:text-red-400"
-              >
-                <TriangleAlert className="size-3.5" />
-                {radar.totalUnmarked} student{radar.totalUnmarked === 1 ? "" : "s"} unmarked
-                today
-              </button>
-            ) : (
-              <Badge className="border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                All marked
-              </Badge>
-            )}
-          </CardAction>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-1.5">
+                <CalendarX2 className="size-4 text-muted-foreground" />
+                Attendance &amp; Defaulters Radar
+              </CardTitle>
+              <CardDescription>Class-wise marking status for today</CardDescription>
+            </div>
+            <CardAction>
+              {radar.totalUnmarked > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  className="flex h-11 items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-500/25 md:h-6 dark:text-red-400"
+                >
+                  <TriangleAlert className="size-3.5" />
+                  {radar.totalUnmarked} student{radar.totalUnmarked === 1 ? "" : "s"} unmarked
+                  today
+                </button>
+              ) : (
+                <Badge className="border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                  All marked
+                </Badge>
+              )}
+            </CardAction>
+          </div>
         </CardHeader>
         <CardContent>
           {radar.classes.length === 0 ? (
