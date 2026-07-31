@@ -35,6 +35,7 @@ export function SendReminderButton({
     <Button
       size="sm"
       variant="outline"
+      className="h-11 md:h-7"
       disabled={isPending || highRiskDefaulterCount === 0}
       onClick={handleClick}
     >

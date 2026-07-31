@@ -35,7 +35,7 @@ export function SiteHeader({
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <SidebarTrigger className="-ml-1" />
+      <SidebarTrigger className="-ml-1 size-11 md:size-7" />
       <Separator orientation="vertical" className="mr-2 h-4" />
       <h1 className="text-sm font-medium">{title}</h1>
       <div className="ml-auto flex items-center gap-2">

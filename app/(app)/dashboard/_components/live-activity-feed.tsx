@@ -44,7 +44,13 @@ export function LiveActivityFeed({ items }: { items: ActivityItem[] }) {
         </CardTitle>
         <CardDescription>Recent actions across the school</CardDescription>
         <CardAction>
-          <Button size="sm" variant="ghost" nativeButton={false} render={<Link href="/audit-logs" />}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-11 md:h-7"
+            nativeButton={false}
+            render={<Link href="/audit-logs" />}
+          >
             View all
           </Button>
         </CardAction>

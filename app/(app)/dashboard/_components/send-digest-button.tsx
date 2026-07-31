@@ -22,7 +22,13 @@ export function SendDigestButton() {
   }
 
   return (
-    <Button size="sm" variant="outline" disabled={isPending} onClick={handleClick}>
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-11 md:h-7"
+      disabled={isPending}
+      onClick={handleClick}
+    >
       <Send />
       {isPending ? "Sending..." : "Send Today's Report"}
     </Button>

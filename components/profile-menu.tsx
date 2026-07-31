@@ -47,7 +47,7 @@ export function ProfileMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-md p-1 pr-2 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
+      <DropdownMenuTrigger className="flex h-11 items-center gap-2 rounded-md p-1 pr-2 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring md:h-auto">
         <Avatar className="size-8">
           <AvatarFallback className="bg-primary text-primary-foreground text-xs">
             {getInitials(name)}
