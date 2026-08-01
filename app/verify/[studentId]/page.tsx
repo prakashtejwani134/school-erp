@@ -40,7 +40,7 @@ export default async function VerifyStudentPage({
       <Card className="w-full max-w-sm">
         {student ? (
           <>
-            <CardHeader className="items-center text-center">
+            <CardHeader className="justify-items-center text-center">
               <SealBadge label="Verified" size={64} className="mb-2" />
               <CardTitle className="text-xl">Valid Student ID</CardTitle>
               <CardDescription>{student.school.schoolName}</CardDescription>
@@ -61,7 +61,7 @@ export default async function VerifyStudentPage({
           </>
         ) : (
           <>
-            <CardHeader className="items-center text-center">
+            <CardHeader className="justify-items-center text-center">
               <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
                 <BadgeX className="size-6" />
               </div>

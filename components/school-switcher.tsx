@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -93,18 +94,20 @@ export function SchoolSwitcher({
         }
       />
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuLabel>Switch school</DropdownMenuLabel>
-        {schools.map((school) => (
-          <DropdownMenuItem
-            key={school.id}
-            onClick={() => handleSelect(school.id)}
-          >
-            {school.name}
-            {school.id === activeSchoolId ? (
-              <Check className="ml-auto size-4" />
-            ) : null}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Switch school</DropdownMenuLabel>
+          {schools.map((school) => (
+            <DropdownMenuItem
+              key={school.id}
+              onClick={() => handleSelect(school.id)}
+            >
+              {school.name}
+              {school.id === activeSchoolId ? (
+                <Check className="ml-auto size-4" />
+              ) : null}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
