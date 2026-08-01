@@ -113,6 +113,7 @@ export function FeesClient({
         <Button
           variant="outline"
           size="sm"
+          nativeButton={false}
           render={<a href="/fees/structures/export" download />}
         >
           <Download />
@@ -121,6 +122,7 @@ export function FeesClient({
         <Button
           variant="outline"
           size="sm"
+          nativeButton={false}
           render={<a href="/fees/receipts/export" download />}
         >
           <Download />

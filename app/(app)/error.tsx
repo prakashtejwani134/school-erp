@@ -40,7 +40,9 @@ export default function AppError({
           <Button variant="outline" onClick={() => unstable_retry()}>
             Try again
           </Button>
-          <Button render={<Link href="/dashboard" />}>Go to dashboard</Button>
+          <Button nativeButton={false} render={<Link href="/dashboard" />}>
+            Go to dashboard
+          </Button>
         </div>
       </CardContent>
     </Card>

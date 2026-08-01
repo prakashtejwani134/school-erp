@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -50,7 +51,9 @@ export function ParentProfileMenu({ name }: { name: string }) {
         <span className="hidden text-sm font-medium sm:inline">{name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel className="text-sm font-medium">{name}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-sm font-medium">{name}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

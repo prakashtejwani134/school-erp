@@ -69,6 +69,7 @@ export function WhatsAppReminderButton({
       variant="ghost"
       size="icon"
       disabled={!phone}
+      nativeButton={false}
       render={<a href={href} target="_blank" rel="noopener noreferrer" />}
     >
       <MessageCircle />

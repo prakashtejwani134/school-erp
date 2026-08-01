@@ -18,7 +18,7 @@ export default function AppNotFound() {
             moved.
           </p>
         </div>
-        <Button render={<Link href="/dashboard" />} className="mt-2">
+        <Button nativeButton={false} render={<Link href="/dashboard" />} className="mt-2">
           Go to dashboard
         </Button>
       </CardContent>

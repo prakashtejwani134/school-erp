@@ -19,7 +19,7 @@ export default function RootNotFound() {
               moved.
             </p>
           </div>
-          <Button render={<Link href="/login" />} className="mt-2">
+          <Button nativeButton={false} render={<Link href="/login" />} className="mt-2">
             Back to sign in
           </Button>
         </CardContent>

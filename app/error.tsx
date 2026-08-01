@@ -41,7 +41,9 @@ export default function RootError({
             <Button variant="outline" onClick={() => unstable_retry()}>
               Try again
             </Button>
-            <Button render={<Link href="/login" />}>Back to sign in</Button>
+            <Button nativeButton={false} render={<Link href="/login" />}>
+              Back to sign in
+            </Button>
           </div>
         </CardContent>
       </Card>
