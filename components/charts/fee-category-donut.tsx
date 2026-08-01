@@ -5,16 +5,20 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recha
 import { formatINR } from "@/lib/currency";
 import type { FeeCategoryShare } from "@/app/(app)/dashboard/analytics";
 
-// Fixed categorical order (never cycled/reassigned by rank) — "Other" always
-// gets neutral gray since it's an aggregated fold, not a real category.
+// "The Registrar" tokens only — no default recharts blue/purple/green/
+// orange. A tint/shade ramp built entirely from --accent (teal) via
+// color-mix, with --brass spent once (sparingly, per the design brief) on
+// the last real category slot. "Other" always gets neutral ink-muted gray
+// since it's an aggregated fold, not a real category. Fixed categorical
+// order (never cycled/reassigned by rank).
 const CATEGORY_COLORS = [
-  "#3b82f6", // blue
-  "#8b5cf6", // violet
-  "#f59e0b", // amber
-  "#10b981", // emerald
-  "#f43f5e", // rose
+  "var(--primary)",
+  "color-mix(in oklch, var(--primary), white 35%)",
+  "color-mix(in oklch, var(--primary), black 20%)",
+  "color-mix(in oklch, var(--primary), white 60%)",
+  "var(--brass)",
 ];
-const OTHER_COLOR = "#9ca3af";
+const OTHER_COLOR = "var(--muted-foreground)";
 
 function colorForIndex(category: string, index: number): string {
   if (category === "Other") return OTHER_COLOR;

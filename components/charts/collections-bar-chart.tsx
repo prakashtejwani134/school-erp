@@ -14,10 +14,11 @@ import {
 import { formatINR } from "@/lib/currency";
 import type { MonthlyFinancial } from "@/app/(app)/dashboard/analytics";
 
-// Matches the app's existing semantic colors: emerald = paid/received
-// (FeeStatusBadge, payment-mode badges), amber = pending (FeeStatusBadge).
-const COLLECTED_COLOR = "#10b981";
-const PENDING_COLOR = "#f59e0b";
+// "The Registrar" tokens only: accent teal for the primary series
+// (collected), brass for the one secondary series (pending) — no default
+// recharts blue/purple/green/orange.
+const COLLECTED_COLOR = "var(--primary)";
+const PENDING_COLOR = "var(--brass)";
 
 function ChartTooltip({
   active,

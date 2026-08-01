@@ -45,14 +45,14 @@ export function FeeStatusBadge({
 }) {
   if (status === "PAID") {
     return (
-      <Badge className="border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+      <Badge className="border-transparent bg-success-tint text-success">
         Paid
       </Badge>
     );
   }
   if (status === "PENDING") {
     return (
-      <Badge className="border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400">
+      <Badge className="border-transparent bg-danger-tint text-destructive">
         Pending ({pendingDueCount})
       </Badge>
     );
@@ -96,6 +96,9 @@ export function getColumns({
     {
       accessorKey: "admissionNo",
       header: "Admission No",
+      cell: ({ getValue }) => (
+        <span className="font-mono text-xs">{getValue<string>()}</span>
+      ),
     },
     {
       id: "className",
