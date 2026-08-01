@@ -8,16 +8,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Sparkline } from "@/components/ui/sparkline";
 import type { Grade } from "@/lib/grades";
 import { getPerformancePageData } from "./data";
 
+// Soft-tint tokens only, bucketed into 4 bands rather than 6 distinct hues
+// (A+/A share a band, as the original did) — success for strong grades,
+// accent for a solid-but-not-top grade, muted for a middling one, danger
+// for grades that need attention.
 const GRADE_BADGE_STYLES: Record<Grade, string> = {
-  "A+": "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  A: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  B: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
-  C: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  D: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
-  F: "bg-red-500/15 text-red-700 dark:text-red-400",
+  "A+": "bg-success-tint text-success",
+  A: "bg-success-tint text-success",
+  B: "bg-accent text-primary",
+  C: "bg-muted text-muted-foreground",
+  D: "bg-danger-tint text-destructive",
+  F: "bg-danger-tint text-destructive",
 };
 
 function TrendBadge({
@@ -37,9 +42,7 @@ function TrendBadge({
   return (
     <Badge
       className={`border-transparent ${
-        isUp
-          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-          : "bg-red-500/15 text-red-700 dark:text-red-400"
+        isUp ? "bg-success-tint text-success" : "bg-danger-tint text-destructive"
       }`}
     >
       {isUp ? (
@@ -71,6 +74,10 @@ export async function PerformanceSection({
     );
   }
 
+  // Real percentage-over-time series, oldest to newest (exams is sorted
+  // most-recent-first) — a natural sparkline, not a forced one.
+  const percentageTrend = [...exams].reverse().map((e) => e.overallPercentage);
+
   return (
     <div className="flex flex-col gap-4">
       <Card>
@@ -83,6 +90,11 @@ export async function PerformanceSection({
             </span>
           </CardTitle>
         </CardHeader>
+        {percentageTrend.length >= 2 ? (
+          <div className="px-(--card-spacing)">
+            <Sparkline data={percentageTrend} />
+          </div>
+        ) : null}
         {trend ? (
           <CardContent>
             <TrendBadge trend={trend} />

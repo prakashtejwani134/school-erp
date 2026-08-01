@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { SealBadge } from "@/components/ui/seal-badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/lib/currency";
@@ -51,14 +52,14 @@ export function FinancialHubSheet({
         </SheetHeader>
 
         <div className="flex flex-col gap-4 overflow-y-auto px-4">
-          <div className="rounded-lg border p-3">
+          <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">Total Outstanding</p>
             <p className="text-2xl font-semibold tabular-nums">
               {formatINR(totalFeeDue)}
             </p>
 
             {categoryBreakdown.length > 0 ? (
-              <div className="mt-3 flex flex-col gap-1.5 border-t pt-3">
+              <div className="mt-3 flex flex-col gap-1.5 border-t border-border pt-3">
                 {categoryBreakdown.map((c) => (
                   <div
                     key={c.title}
@@ -96,15 +97,20 @@ export function FinancialHubSheet({
               </p>
             ) : (
               <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
-                {receipts.map((r) => (
+                {receipts.map((r, index) => (
                   <div
                     key={r.id}
-                    className="flex items-center justify-between rounded-lg border border-input px-3 py-2 text-sm"
+                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
                   >
-                    <span>
-                      <span className="font-medium">{r.feeTitle}</span>
-                      <span className="block text-xs text-muted-foreground">
-                        {r.createdAt} · {PAYMENT_MODE_LABELS[r.paymentMode]}
+                    <span className="flex items-center gap-2">
+                      {index === 0 ? (
+                        <SealBadge label="Paid" size={32} className="shrink-0" />
+                      ) : null}
+                      <span>
+                        <span className="font-medium">{r.feeTitle}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {r.createdAt} · {PAYMENT_MODE_LABELS[r.paymentMode]}
+                        </span>
                       </span>
                     </span>
                     <span className="flex items-center gap-3">

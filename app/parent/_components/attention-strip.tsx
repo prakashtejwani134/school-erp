@@ -53,8 +53,8 @@ export function AttentionStrip({
   if (totalFeeDue > 0) {
     cards.push({
       key: "fee",
-      accentClassName: "border-l-red-500 dark:border-l-red-400",
-      icon: <AlertTriangle className="size-4 text-red-600 dark:text-red-400" />,
+      accentClassName: "border-l-destructive",
+      icon: <AlertTriangle className="size-4 text-destructive" />,
       label: "Pending Fee",
       value: formatINR(totalFeeDue),
       detail: `${feeDues.length} due${feeDues.length === 1 ? "" : "s"} outstanding`,
@@ -73,8 +73,8 @@ export function AttentionStrip({
   if (attendanceIsLow) {
     cards.push({
       key: "attendance",
-      accentClassName: "border-l-amber-500 dark:border-l-amber-400",
-      icon: <CalendarX2 className="size-4 text-amber-600 dark:text-amber-400" />,
+      accentClassName: "border-l-destructive",
+      icon: <CalendarX2 className="size-4 text-destructive" />,
       label: "Attendance This Month",
       value: `${attendanceRatePercent}%`,
       detail:
@@ -98,8 +98,8 @@ export function AttentionStrip({
   if (unreadCircularCount > 0) {
     cards.push({
       key: "circulars",
-      accentClassName: "border-l-indigo-500 dark:border-l-indigo-400",
-      icon: <Megaphone className="size-4 text-indigo-600 dark:text-indigo-400" />,
+      accentClassName: "border-l-primary",
+      icon: <Megaphone className="size-4 text-primary" />,
       label: "New Circulars",
       value: String(unreadCircularCount),
       detail: `${unreadCircularCount} new notice${unreadCircularCount === 1 ? "" : "s"} from the school`,
@@ -120,8 +120,8 @@ export function AttentionStrip({
   if (hasRecentExamResult) {
     cards.push({
       key: "performance",
-      accentClassName: "border-l-emerald-500 dark:border-l-emerald-400",
-      icon: <Trophy className="size-4 text-emerald-600 dark:text-emerald-400" />,
+      accentClassName: "border-l-success",
+      icon: <Trophy className="size-4 text-success" />,
       label: "New Result Published",
       value: "New",
       detail: "A new exam result is ready to view",

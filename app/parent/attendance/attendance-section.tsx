@@ -8,11 +8,13 @@ import { getAttendancePageData } from "./data";
 // is out of scope to touch this phase, so this is kept in sync manually).
 const CONSECUTIVE_ABSENCE_THRESHOLD = 2;
 
+// Soft-tint tokens only: success (good) / danger (concerning) / accent
+// (notable but not bad) / muted (neutral, e.g. an approved leave).
 const STATUS_BADGE_STYLES: Record<string, string> = {
-  PRESENT: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  ABSENT: "bg-red-500/15 text-red-700 dark:text-red-400",
-  LATE: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  LEAVE: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  PRESENT: "bg-success-tint text-success",
+  ABSENT: "bg-danger-tint text-destructive",
+  LATE: "bg-accent text-primary",
+  LEAVE: "bg-muted text-muted-foreground",
 };
 
 const STATUS_LABELS: Record<string, string> = {

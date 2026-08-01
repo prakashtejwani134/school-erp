@@ -52,7 +52,7 @@ export function PayFeeSheet({
           {feeDues.map((due) => (
             <div
               key={due.id}
-              className="flex items-center justify-between rounded-lg border border-input px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
             >
               <span>
                 <span className="font-medium">{due.title}</span>
@@ -66,7 +66,7 @@ export function PayFeeSheet({
             </div>
           ))}
 
-          <div className="mt-2 flex items-center justify-between border-t pt-3 text-sm font-medium">
+          <div className="mt-2 flex items-center justify-between border-t border-border pt-3 text-sm font-medium">
             <span>Total Due</span>
             <span className="tabular-nums">{formatINR(totalFeeDue)}</span>
           </div>

@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Sparkline } from "@/components/ui/sparkline";
 import type { FinancialHubData } from "./financial-hub-data";
 import { FinancialHubSheet } from "./financial-hub-sheet";
 
@@ -26,6 +27,10 @@ export function FinancialHubCard({
 }) {
   const [open, setOpen] = React.useState(false);
 
+  // Real payment history, oldest to newest, for a "money coming in" trend —
+  // not forced onto cards that don't have a natural time series.
+  const paymentTrend = [...data.receipts].reverse().map((r) => r.paidAmount);
+
   return (
     <>
       <Card className="max-w-sm">
@@ -38,6 +43,11 @@ export function FinancialHubCard({
             Fees, challans &amp; payment history
           </CardTitle>
         </CardHeader>
+        {paymentTrend.length >= 2 ? (
+          <div className="px-(--card-spacing)">
+            <Sparkline data={paymentTrend} />
+          </div>
+        ) : null}
         <CardFooter>
           <Button
             size="sm"

@@ -27,15 +27,15 @@ export async function CircularsSection({ schoolId }: { schoolId: string }) {
         {unreadCount} new notice{unreadCount === 1 ? "" : "s"} in the last week
       </p>
 
-      <Accordion className="rounded-lg border px-4">
+      <Accordion className="rounded-xl border border-border bg-card px-4 shadow-sm">
         {circulars.map((circular) => (
           <AccordionItem key={circular.id} value={circular.id}>
-            <AccordionTrigger>
+            <AccordionTrigger className="rounded-md px-2 py-3 hover:bg-accent max-md:py-3.5">
               <span className="flex flex-1 flex-col items-start gap-1 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <span className="font-medium">{circular.title}</span>
                 <span className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
                   {circular.isNew ? (
-                    <Badge className="border-transparent bg-indigo-500/15 text-indigo-700 dark:text-indigo-400">
+                    <Badge className="border-transparent bg-accent text-primary">
                       New
                     </Badge>
                   ) : null}
@@ -43,7 +43,7 @@ export async function CircularsSection({ schoolId }: { schoolId: string }) {
                 </span>
               </span>
             </AccordionTrigger>
-            <AccordionContent>{circular.body}</AccordionContent>
+            <AccordionContent className="px-2">{circular.body}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
