@@ -55,11 +55,11 @@ export function AttendanceRadar({ radar }: { radar: AttendanceRadarData }) {
               Add a class to see attendance here.
             </p>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col divide-y divide-border">
               {radar.classes.map((cls) => (
                 <div
                   key={cls.classId}
-                  className="flex items-center justify-between gap-3 text-sm"
+                  className="flex items-center justify-between gap-3 py-2 text-sm first:pt-0 last:pb-0"
                 >
                   <span className="min-w-0 truncate">
                     {cls.name} - {cls.section}
