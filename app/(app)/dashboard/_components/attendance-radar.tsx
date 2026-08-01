@@ -3,8 +3,8 @@
 import * as React from "react";
 import { CalendarX2, TriangleAlert } from "lucide-react";
 
-import { GlassCard } from "@/components/ui/glass-card";
 import {
+  Card,
   CardAction,
   CardContent,
   CardDescription,
@@ -20,7 +20,7 @@ export function AttendanceRadar({ radar }: { radar: AttendanceRadarData }) {
 
   return (
     <>
-      <GlassCard>
+      <Card>
         <CardHeader>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -79,7 +79,7 @@ export function AttendanceRadar({ radar }: { radar: AttendanceRadarData }) {
             </div>
           )}
         </CardContent>
-      </GlassCard>
+      </Card>
 
       <UnmarkedAttendanceSheet open={open} onOpenChange={setOpen} classes={radar.classes} />
     </>

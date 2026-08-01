@@ -149,6 +149,35 @@ export async function getAttendanceRadar(schoolId: string): Promise<AttendanceRa
   return { classes: rows, totalUnmarked };
 }
 
+/** School-wide attendance rate for each of the last 7 days (oldest to newest) — sparkline data source for the attendance progress ring. */
+export async function getAttendanceTrend(schoolId: string): Promise<number[]> {
+  const today = parseDateParam(todayParam());
+  const start = new Date(today);
+  start.setDate(start.getDate() - 6);
+
+  const attendances = await prisma.attendance.findMany({
+    where: { schoolId, date: { gte: start, lte: today } },
+    select: { date: true, status: true },
+  });
+
+  const byDay = new Map<string, { marked: number; present: number }>();
+  for (const attendance of attendances) {
+    const key = attendance.date.toISOString().slice(0, 10);
+    const entry = byDay.get(key) ?? { marked: 0, present: 0 };
+    entry.marked += 1;
+    if (attendance.status === "PRESENT") entry.present += 1;
+    byDay.set(key, entry);
+  }
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(start);
+    day.setDate(day.getDate() + i);
+    const key = day.toISOString().slice(0, 10);
+    const entry = byDay.get(key);
+    return entry && entry.marked > 0 ? Math.round((entry.present / entry.marked) * 100) : 0;
+  });
+}
+
 export type ActivityItem = {
   id: string;
   actionType: string;

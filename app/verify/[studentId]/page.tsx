@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BadgeCheck, BadgeX, School } from "lucide-react";
+import { BadgeX, School } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SealBadge } from "@/components/ui/seal-badge";
 
 export const metadata: Metadata = {
   title: "ID Card Verification",
@@ -40,9 +41,7 @@ export default async function VerifyStudentPage({
         {student ? (
           <>
             <CardHeader className="items-center text-center">
-              <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                <BadgeCheck className="size-6" />
-              </div>
+              <SealBadge label="Verified" size={64} className="mb-2" />
               <CardTitle className="text-xl">Valid Student ID</CardTitle>
               <CardDescription>{student.school.schoolName}</CardDescription>
             </CardHeader>

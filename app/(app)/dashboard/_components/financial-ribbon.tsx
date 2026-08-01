@@ -2,15 +2,21 @@ import { IndianRupee, Receipt, TriangleAlert } from "lucide-react";
 
 import { StatCard } from "@/components/stat-card";
 import { FadeInItem, FadeInStagger } from "@/components/motion/fade-in";
-import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
-import { CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatINR } from "@/lib/currency";
 import { PAYMENT_MODE_BADGE_STYLES, PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
 import type { FinancialRibbonSummary } from "../command-center-data";
 import { SendReminderButton } from "./send-reminder-button";
 
-export function FinancialRibbon({ summary }: { summary: FinancialRibbonSummary }) {
+export function FinancialRibbon({
+  summary,
+  collectionTrend,
+}: {
+  summary: FinancialRibbonSummary;
+  /** Trailing collection amounts (oldest to newest) for the "Today's Collection" sparkline. */
+  collectionTrend?: number[];
+}) {
   return (
     <div className="flex flex-col gap-4">
       <FadeInStagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -30,6 +36,7 @@ export function FinancialRibbon({ summary }: { summary: FinancialRibbonSummary }
             format="currency"
             footer={`${summary.todayReceiptCount} receipt${summary.todayReceiptCount === 1 ? "" : "s"} so far today`}
             icon="indian-rupee"
+            trend={collectionTrend}
           />
         </FadeInItem>
         <FadeInItem>
@@ -52,7 +59,7 @@ export function FinancialRibbon({ summary }: { summary: FinancialRibbonSummary }
         </FadeInItem>
       </FadeInStagger>
 
-      <GlassCard>
+      <Card>
         <CardHeader>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-1.5">
@@ -90,7 +97,7 @@ export function FinancialRibbon({ summary }: { summary: FinancialRibbonSummary }
             </p>
           ) : null}
         </CardContent>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

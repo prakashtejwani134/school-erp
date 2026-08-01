@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { BadgePercent, CalendarDays, IdCard, MapPin, Phone } from "lucide-react";
+import { CalendarDays, IdCard, MapPin, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SealBadge } from "@/components/ui/seal-badge";
 import { FeeStatusBadge } from "./columns";
 import { IdCardModal } from "./id-card-modal";
 import type { SchoolBranding, StudentRow } from "./types";
@@ -61,11 +62,15 @@ export function StudentRowDetail({
           </div>
         </div>
         {student.isDiscounted ? (
-          <DetailField
-            icon={BadgePercent}
-            label="Concession Reason"
-            value={student.concessionReason ?? "Not on file"}
-          />
+          <div className="flex items-start gap-2">
+            <SealBadge label="Approved" variant="brass" size={40} />
+            <div>
+              <p className="text-xs text-muted-foreground">Concession Reason</p>
+              <p className="text-sm font-medium">
+                {student.concessionReason ?? "Not on file"}
+              </p>
+            </div>
+          </div>
         ) : null}
       </div>
 

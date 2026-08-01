@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 
 import {
+  Card,
   CardAction,
   CardDescription,
   CardFooter,
@@ -17,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
-import { GlassCard } from "@/components/ui/glass-card";
+import { Sparkline } from "@/components/ui/sparkline";
 import { formatINR } from "@/lib/currency";
 
 const STAT_ICONS = {
@@ -46,12 +47,15 @@ export function StatCard({
   format = "integer",
   footer,
   icon,
+  trend,
 }: {
   label: string;
   value: number;
   format?: StatFormat;
   footer: string;
   icon: StatIconName;
+  /** Optional trend series (e.g. last 6 months) rendered as an inline sparkline. */
+  trend?: number[];
 }) {
   const Icon = STAT_ICONS[icon];
   return (
@@ -60,7 +64,7 @@ export function StatCard({
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
     >
-      <GlassCard className="h-full transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/10">
+      <Card className="h-full transition-shadow duration-300 hover:shadow-md">
         <CardHeader>
           <CardDescription>{label}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -72,10 +76,15 @@ export function StatCard({
             </div>
           </CardAction>
         </CardHeader>
+        {trend && trend.length >= 2 ? (
+          <div className="px-(--card-spacing)">
+            <Sparkline data={trend} />
+          </div>
+        ) : null}
         <CardFooter>
           <p className="text-xs text-muted-foreground">{footer}</p>
         </CardFooter>
-      </GlassCard>
+      </Card>
     </motion.div>
   );
 }

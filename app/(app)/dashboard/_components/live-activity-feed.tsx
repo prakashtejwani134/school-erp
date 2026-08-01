@@ -11,8 +11,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { GlassCard } from "@/components/ui/glass-card";
 import {
+  Card,
   CardAction,
   CardContent,
   CardDescription,
@@ -36,7 +36,7 @@ const ACTION_ICONS: Record<string, LucideIcon> = {
 
 export function LiveActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
-    <GlassCard className="h-full">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
           <Activity className="size-4 text-muted-foreground" />
@@ -79,6 +79,6 @@ export function LiveActivityFeed({ items }: { items: ActivityItem[] }) {
           </div>
         )}
       </CardContent>
-    </GlassCard>
+    </Card>
   );
 }
