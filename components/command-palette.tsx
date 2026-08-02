@@ -25,6 +25,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { OPEN_COMMAND_PALETTE_EVENT } from "@/components/command-palette-trigger";
 import { canAccess, type NavKey } from "@/lib/rbac";
 
 const NAV_ITEMS: { title: string; href: string; icon: typeof LayoutDashboard; key: NavKey }[] = [
@@ -63,6 +64,14 @@ export function CommandPalette({ role }: { role: Role }) {
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  React.useEffect(() => {
+    function handleOpenEvent() {
+      setOpen(true);
+    }
+    window.addEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenEvent);
+    return () => window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenEvent);
   }, []);
 
   function runCommand(href: string) {

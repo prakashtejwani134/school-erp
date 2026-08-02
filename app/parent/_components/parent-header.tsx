@@ -1,4 +1,5 @@
 import { Separator } from "@/components/ui/separator";
+import { CommandPaletteTrigger } from "@/components/command-palette-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ParentProfileMenu } from "./parent-profile-menu";
 
@@ -10,6 +11,7 @@ export function ParentHeader({ name }: { name: string }) {
     <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
       <span className="text-sm font-medium">Parent Portal</span>
       <div className="flex items-center gap-2">
+        <CommandPaletteTrigger />
         <ThemeToggle />
         <Separator orientation="vertical" className="h-6" />
         <ParentProfileMenu name={name} />

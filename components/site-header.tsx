@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { CommandPaletteTrigger } from "@/components/command-palette-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileMenu } from "@/components/profile-menu";
 
@@ -39,6 +40,7 @@ export function SiteHeader({
       <Separator orientation="vertical" className="mr-2 h-4" />
       <h1 className="text-sm font-medium">{title}</h1>
       <div className="ml-auto flex items-center gap-2">
+        <CommandPaletteTrigger />
         <ThemeToggle />
         <Separator orientation="vertical" className="h-6" />
         <ProfileMenu name={user.name} email={user.email} role={user.role} />
