@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,6 +27,10 @@ export const metadata: Metadata = {
   description: "Multi-school management dashboard",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#0E7C7B",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,6 +52,7 @@ export default function RootLayout({
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
