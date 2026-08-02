@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { AnimatedTableBody, AnimatedTableRow } from "@/components/motion/table-row";
 import { WhatsAppReminderButton } from "@/components/fees/whatsapp-reminder-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatINR } from "@/lib/currency";
 import type { DefaulterRisk } from "@/lib/analytics/defaulters";
 
@@ -104,11 +105,13 @@ export function PendingDuesTable({
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={7}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No pending dues. All caught up.
+              <TableCell colSpan={7} className="whitespace-normal text-center">
+                <EmptyState
+                  compact
+                  title="All caught up"
+                  description="No pending dues right now."
+                  className="justify-center"
+                />
               </TableCell>
             </TableRow>
           )}

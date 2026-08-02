@@ -1,9 +1,10 @@
-import { IndianRupee, Receipt, TriangleAlert } from "lucide-react";
+import { IndianRupee, TriangleAlert } from "lucide-react";
 
 import { StatCard } from "@/components/stat-card";
 import { FadeInItem, FadeInStagger } from "@/components/motion/fade-in";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatINR } from "@/lib/currency";
 import { PAYMENT_MODE_BADGE_STYLES, PAYMENT_MODE_LABELS } from "@/lib/payment-mode";
 import type { FinancialRibbonSummary } from "../command-center-data";
@@ -84,10 +85,7 @@ export function FinancialRibbon({
               ))}
             </div>
           ) : (
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Receipt className="size-3.5" />
-              No fee collections recorded yet today.
-            </p>
+            <EmptyState compact title="No fee collections recorded yet today" />
           )}
           {summary.highRiskDefaulterCount > 0 ? (
             <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">

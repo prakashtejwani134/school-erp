@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SealBadge } from "@/components/ui/seal-badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -92,9 +93,7 @@ export function FinancialHubSheet({
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">Payment History</p>
             {receipts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No payments recorded yet.
-              </p>
+              <EmptyState compact title="No payments recorded yet" className="justify-start" />
             ) : (
               <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
                 {receipts.map((r, index) => (

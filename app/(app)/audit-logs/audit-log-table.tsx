@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import type { AuditActionType } from "@prisma/client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -112,7 +113,19 @@ export function AuditLogTable({ logs }: { logs: AuditLogEntry[] }) {
         columns={columns}
         data={filteredLogs}
         getRowId={(row) => row.id}
-        emptyMessage="No activity recorded yet."
+        emptyMessage={
+          logs.length === 0 ? (
+            <EmptyState
+              title="No activity yet"
+              description="Every fee collection, student change, and settings update will show up here, attributed to whoever made it."
+            />
+          ) : (
+            <EmptyState
+              title="No activity matches your filters"
+              description="Try a different search, action type, or entity."
+            />
+          )
+        }
       />
     </div>
   );

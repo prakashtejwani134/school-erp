@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import type { ActivityItem } from "../command-center-data";
 
@@ -74,7 +75,10 @@ export function LiveActivityFeed({ items }: { items: ActivityItem[] }) {
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+          <EmptyState
+            title="Nothing's happened yet"
+            description="Fee collections, student changes, and attendance will show up here as they happen."
+          />
         ) : (
           <div className="flex flex-col gap-3">
             {items.map((item) => {

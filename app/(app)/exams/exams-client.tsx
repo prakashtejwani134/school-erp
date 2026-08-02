@@ -32,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { computeGrade, computePercentage } from "@/lib/grades";
 
 import { createExam, getMarksForExamSubject, saveMarks } from "./actions";
@@ -167,11 +168,11 @@ function ExamsListCard({ exams }: { exams: ExamRow[] }) {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={3}
-                    className="py-8 text-center text-muted-foreground"
-                  >
-                    No exams yet.
+                  <TableCell colSpan={3} className="whitespace-normal text-center">
+                    <EmptyState
+                      title="No exams yet"
+                      description="Create one using the form above to start entering marks."
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -390,9 +391,7 @@ function MarksEntryCard({
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading students...</p>
         ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No students in this exam&apos;s class.
-          </p>
+          <EmptyState compact title="No students in this class yet" />
         ) : (
           <div className="overflow-hidden rounded-lg border">
             <Table>

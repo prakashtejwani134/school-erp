@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -71,6 +72,12 @@ export function StudentsClient({
     });
   }, [students, search, classFilter]);
 
+  function openAddStudent() {
+    setEditingStudent(null);
+    setFormKey((k) => k + 1);
+    setFormOpen(true);
+  }
+
   const columns = React.useMemo(
     () =>
       getColumns({
@@ -114,13 +121,7 @@ export function StudentsClient({
             </SelectContent>
           </Select>
         </div>
-        <Button
-          onClick={() => {
-            setEditingStudent(null);
-            setFormKey((k) => k + 1);
-            setFormOpen(true);
-          }}
-        >
+        <Button onClick={openAddStudent}>
           <Plus />
           Add Student
         </Button>
@@ -133,7 +134,25 @@ export function StudentsClient({
         renderRowDetail={(student) => (
           <StudentRowDetail student={student} branding={branding} />
         )}
-        emptyMessage="No students found."
+        emptyMessage={
+          students.length === 0 ? (
+            <EmptyState
+              title="No students yet"
+              description="Add your first student to start tracking attendance, fees, and results."
+              action={
+                <Button size="sm" onClick={openAddStudent}>
+                  <Plus />
+                  Add Student
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="No students match your search"
+              description="Try a different name, or clear the class filter."
+            />
+          )
+        }
       />
 
       <StudentFormDialog

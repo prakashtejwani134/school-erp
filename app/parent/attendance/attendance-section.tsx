@@ -2,6 +2,7 @@ import { CalendarX2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getAttendancePageData } from "./data";
 
 // Mirrors AttentionStrip's CONSECUTIVE_ABSENCE_THRESHOLD (attention-strip.tsx
@@ -59,9 +60,10 @@ export async function AttendanceSection({
         </CardHeader>
         <CardContent>
           {days.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No attendance has been marked yet this month.
-            </p>
+            <EmptyState
+              title="No attendance marked yet"
+              description="Nothing's been recorded for this month so far."
+            />
           ) : (
             <div className="flex flex-col divide-y">
               {days.map((day) => (

@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Sparkline } from "@/components/ui/sparkline";
 import type { Grade } from "@/lib/grades";
 import { getPerformancePageData } from "./data";
@@ -67,8 +68,11 @@ export async function PerformanceSection({
   if (exams.length === 0) {
     return (
       <Card>
-        <CardContent className="py-16 text-center text-muted-foreground">
-          No exam results published yet.
+        <CardContent>
+          <EmptyState
+            title="No results published yet"
+            description="Exam results will show up here as soon as the school publishes them."
+          />
         </CardContent>
       </Card>
     );

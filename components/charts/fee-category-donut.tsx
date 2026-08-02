@@ -2,6 +2,7 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatINR } from "@/lib/currency";
 import type { FeeCategoryShare } from "@/app/(app)/dashboard/analytics";
 
@@ -57,8 +58,11 @@ export function FeeCategoryDonut({ data }: { data: FeeCategoryShare[] }) {
 
   if (total === 0) {
     return (
-      <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
-        No fee collections recorded yet.
+      <div className="flex h-[280px] items-center justify-center">
+        <EmptyState
+          title="No collections yet"
+          description="Once fees are collected, the breakdown by category will show up here."
+        />
       </div>
     );
   }

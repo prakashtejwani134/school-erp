@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AnimatedTableBody, AnimatedTableRow } from "@/components/motion/table-row";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import type { ClassRow } from "./types";
 
@@ -40,11 +41,11 @@ export function ClassesTable({ classes }: { classes: ClassRow[] }) {
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={3}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No classes found.
+              <TableCell colSpan={3} className="whitespace-normal text-center">
+                <EmptyState
+                  title="No classes yet"
+                  description="Classes are set up by the school during onboarding — reach out if one's missing."
+                />
               </TableCell>
             </TableRow>
           )}

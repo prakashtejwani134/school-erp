@@ -25,6 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -242,11 +243,17 @@ function FeeCategoriesCard({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="py-8 text-center text-muted-foreground"
-                  >
-                    No fee categories yet.
+                  <TableCell colSpan={5} className="whitespace-normal text-center">
+                    <EmptyState
+                      title="No fee categories yet"
+                      description="Add a fee category to start generating dues for students."
+                      action={
+                        <Button size="sm" onClick={() => openDialog(null)}>
+                          <Plus />
+                          Add category
+                        </Button>
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -366,7 +373,7 @@ function SubjectsCard({ subjects }: { subjects: SubjectRow[] }) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No subjects yet.</p>
+          <EmptyState compact title="No subjects yet" />
         )}
       </CardContent>
 

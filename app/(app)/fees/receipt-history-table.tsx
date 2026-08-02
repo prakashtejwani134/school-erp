@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AnimatedTableBody, AnimatedTableRow } from "@/components/motion/table-row";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ExpandableDetailRow } from "@/components/ui/expandable-table";
 import { ReceiptModal } from "@/components/fees/receipt-modal";
 import { formatINR } from "@/lib/currency";
@@ -149,11 +150,8 @@ export function ReceiptHistoryTable({
             })
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={COLUMN_COUNT}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No receipts yet.
+              <TableCell colSpan={COLUMN_COUNT} className="whitespace-normal text-center">
+                <EmptyState compact title="No receipts yet" className="justify-center" />
               </TableCell>
             </TableRow>
           )}

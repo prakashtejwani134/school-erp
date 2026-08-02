@@ -7,6 +7,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getCircularsPageData } from "./data";
 
 export async function CircularsSection({ schoolId }: { schoolId: string }) {
@@ -14,9 +16,14 @@ export async function CircularsSection({ schoolId }: { schoolId: string }) {
 
   if (circulars.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No circulars have been published yet.
-      </p>
+      <Card>
+        <CardContent>
+          <EmptyState
+            title="No circulars yet"
+            description="Notices from the school will show up here as soon as they're published."
+          />
+        </CardContent>
+      </Card>
     );
   }
 

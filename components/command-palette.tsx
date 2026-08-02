@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import {
   CalendarCheck,
+  ClipboardList,
   GraduationCap,
   IndianRupee,
   LayoutDashboard,
@@ -31,6 +32,7 @@ const NAV_ITEMS: { title: string; href: string; icon: typeof LayoutDashboard; ke
   { title: "Students", href: "/students", icon: Users, key: "students" },
   { title: "Classes", href: "/classes", icon: GraduationCap, key: "classes" },
   { title: "Attendance", href: "/attendance", icon: CalendarCheck, key: "attendance" },
+  { title: "Exams", href: "/exams", icon: ClipboardList, key: "exams" },
   { title: "Fees", href: "/fees", icon: IndianRupee, key: "fees" },
   { title: "Audit Logs", href: "/audit-logs", icon: ScrollText, key: "auditLogs" },
   { title: "Settings", href: "/settings", icon: Settings, key: "settings" },

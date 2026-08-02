@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { getParentContext } from "@/lib/parent-context";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AttendanceSection } from "./attendance-section";
 import { AttendanceSkeleton } from "./attendance-skeleton";
 
@@ -37,9 +38,10 @@ export default async function ParentAttendancePage() {
           <AttendanceSection schoolId={context.schoolId} studentId={activeStudent.id} />
         </Suspense>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          No students are linked to your account yet.
-        </p>
+        <EmptyState
+          title="No students linked yet"
+          description="Contact the school office to link your child's profile to your account."
+        />
       )}
     </div>
   );

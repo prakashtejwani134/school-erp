@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AttendancePillToggle } from "@/components/ui/attendance-pill-toggle";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
 
 import { saveAttendance } from "./actions";
@@ -141,8 +142,11 @@ function AttendanceMarkingList({
   if (students.length === 0) {
     return (
       <Card>
-        <CardContent className="py-16 text-center text-muted-foreground">
-          No students in this class yet.
+        <CardContent>
+          <EmptyState
+            title="No students in this class yet"
+            description="Attendance can be marked once students are enrolled in this class."
+          />
         </CardContent>
       </Card>
     );

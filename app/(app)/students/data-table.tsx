@@ -33,7 +33,7 @@ export function DataTable<TData, TValue>({
   data: TData[];
   getRowId?: (row: TData) => string;
   renderRowDetail?: (row: TData) => React.ReactNode;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [expanded, setExpanded] = React.useState<ExpandedState>({});
@@ -98,10 +98,7 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
-              >
+              <TableCell colSpan={columns.length} className="whitespace-normal text-center">
                 {emptyMessage}
               </TableCell>
             </TableRow>
